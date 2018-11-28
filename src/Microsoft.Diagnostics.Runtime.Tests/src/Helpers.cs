@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using JetBrains.Annotations;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
 {
