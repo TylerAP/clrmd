@@ -1,0 +1,26 @@
+version: 1.0.1-dev{build}
+branches:
+  only:
+  - feature/public-xplat-netstd-appveyor
+max_jobs: 1
+image:
+  - Visual Studio 2017
+  - Ubuntu1804
+configuration: Debug
+platform: Any CPU
+clone_depth: 1
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+cache:
+  - src/TestTargets/bin
+build:
+  project: Microsoft.Diagnostics.Runtime.sln
+  verbosity: minimal
+before_build:
+  - nuget restore

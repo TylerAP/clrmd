@@ -4,14 +4,21 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <NoWarn>1591;1701</NoWarn>
     <IsPackable>true</IsPackable>
-    <Description />
-    <PackageReleaseNotes>$(Description)</PackageReleaseNotes>
-    <PackageTags />
+    <Description>ClrMD is a set of advanced APIs for programmatically inspecting a crash dump of a .NET program much in the same way that the SOS Debugging Extensions (SOS) do. This allows you to write automated crash analysis for your applications as well as automate many common debugger tasks. In addition to reading crash dumps ClrMD also allows supports attaching to live processes.</Description>
+    <PackageReleaseNotes />
+    <PackageTags>Managed,Debugger,Dump,Minidump,Attach</PackageTags>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\..\..\eng\Microsoft.Diagnostics.Runtime.snk</AssemblyOriginatorKeyFile>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
+    <Authors>Lee Culver &lt;lee.culver@microsoft.com&gt;</Authors>
+    <Copyright>Copyright © 2018 Microsoft</Copyright>
+    <PackageProjectUrl>https://github.com/Microsoft/clrmd</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Microsoft/clrmd/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/Microsoft/clrmd.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NET45</DefineConstants>
@@ -19,6 +26,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
     <DefineConstants>TRACE;NET45</DefineConstants>
     <DocumentationFile>Microsoft.Diagnostics.Runtime.Native.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Microsoft.Diagnostics.Runtime.Native.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DocumentationFile>bin\Release\Microsoft.Diagnostics.Runtime.Native.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,5 +45,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
   </ItemGroup>
 </Project>
