@@ -14,14 +14,18 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
+                
                 TestProperties(runtime);
             }
         }
 
         internal static void TestProperties(ClrRuntime runtime)
         {
-            ClrThread thread = runtime.Threads.Single(t => !t.IsFinalizer);
+            ClrThread thread = runtime.Threads.Where(t => !t.IsFinalizer).SingleOrDefault();
+            Assert.NotNull(thread);
+            
             ClrException ex = thread.CurrentException;
             Assert.NotNull(ex);
 

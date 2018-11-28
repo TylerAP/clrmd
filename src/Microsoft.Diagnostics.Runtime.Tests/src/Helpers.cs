@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
 {
@@ -51,28 +52,32 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             return set;
         }
 
+        [CanBeNull]
         public static ClrAppDomain GetDomainByName(this ClrRuntime runtime, string domainName)
         {
-            return runtime.AppDomains.Where(ad => ad.Name == domainName).Single();
+            return runtime.AppDomains.Where(ad => ad.Name == domainName).SingleOrDefault();
         }
 
+        [CanBeNull]
         public static ClrModule GetModule(this ClrRuntime runtime, string filename)
         {
             return (from module in runtime.Modules
                     let file = Path.GetFileName(module.FileName)
                     where file.Equals(filename, StringComparison.OrdinalIgnoreCase)
-                    select module).Single();
+                    select module).SingleOrDefault();
         }
 
+        [CanBeNull]
         public static ClrThread GetMainThread(this ClrRuntime runtime)
         {
-            ClrThread thread = runtime.Threads.Where(t => !t.IsFinalizer).Single();
+            ClrThread thread = runtime.Threads.Where(t => !t.IsFinalizer).SingleOrDefault();
             return thread;
         }
 
+        [CanBeNull]
         public static ClrStackFrame GetFrame(this ClrThread thread, string functionName)
         {
-            return thread.StackTrace.Where(sf => sf.Method != null ? sf.Method.Name == functionName : false).Single();
+            return thread.StackTrace.Where(sf => sf.Method != null ? sf.Method.Name == functionName : false).SingleOrDefault();
         }
 
         public static string TestWorkingDirectory

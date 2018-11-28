@@ -20,7 +20,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             // Ensure all methods in our source file is in the pdb.
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
 
                 PdbInfo[] allPdbs = runtime.Modules.Where(m => m.Pdb != null).Select(m => m.Pdb).ToArray();
                 Assert.True(allPdbs.Length > 1);
@@ -62,7 +62,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrThread thread = runtime.GetMainThread();
 
                 HashSet<int> sourceLines = new HashSet<int>();
@@ -99,7 +99,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             // Ensure all methods in our source file is in the pdb.
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrModule module = runtime.Modules.Where(m => m.Name.Equals(TestTargets.NestedException.Executable, StringComparison.OrdinalIgnoreCase)).Single();
                 ClrType type = module.GetTypeByName("Program");
 

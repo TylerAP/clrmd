@@ -17,7 +17,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             // Simply test that we can enumerate the heap.
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 bool encounteredFoo = false;
@@ -43,7 +43,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             // Simply test that we can enumerate the heap.
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 List<ClrObject> objects = new List<ClrObject>(heap.EnumerateObjects());
@@ -69,7 +69,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             // Simply test that we can enumerate the heap.
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 List<ClrObject> expectedList = new List<ClrObject>(heap.EnumerateObjects());
@@ -97,7 +97,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.Types.LoadFullDump(GCMode.Server))
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 Assert.True(runtime.ServerGC);
@@ -111,7 +111,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.Types.LoadFullDump(GCMode.Workstation))
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 Assert.False(runtime.ServerGC);

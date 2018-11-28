@@ -14,10 +14,14 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
+                
                 ClrHeap heap = runtime.Heap;
+                Assert.NotNull(heap);
 
                 ClrModule shared = runtime.GetModule("sharedlibrary.dll");
+                Assert.NotNull(shared);
                 Assert.NotNull(shared.GetTypeByName("Foo"));
                 Assert.Null(shared.GetTypeByName("Types"));
 

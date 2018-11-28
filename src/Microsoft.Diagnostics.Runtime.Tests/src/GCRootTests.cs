@@ -17,7 +17,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 ulong obj = heap.GetObjectsOfType("DoubleRef").Single();
@@ -48,7 +48,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 ClrModule module = heap.Runtime.GetMainModule();
@@ -70,7 +70,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 ObjectSet hash = new ObjectSet(heap);
@@ -95,7 +95,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
 
                 ObjectSet hash = new ObjectSet(heap);
@@ -115,7 +115,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.SkipStack;
 
@@ -141,7 +141,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.SkipStack;
                 GCRoot gcroot = new GCRoot(runtime.Heap);
@@ -167,7 +167,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.SkipStack;
                 GCRoot gcroot = new GCRoot(runtime.Heap);
@@ -192,7 +192,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.SkipStack;
                 GCRoot gcroot = new GCRoot(runtime.Heap);
@@ -217,7 +217,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.SkipStack;
                 GCRoot gcroot = new GCRoot(runtime.Heap);
@@ -253,7 +253,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
@@ -286,10 +286,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             bool hasThread = false, hasStatic = false;
             foreach (GCRootPath rootPath in rootPaths)
             {
-                if (rootPath.Root.Kind == GCRootKind.Pinning)
-                    hasStatic = true;
-                else if (rootPath.Root.Kind == GCRootKind.LocalVar)
-                    hasThread = true;
+                switch (rootPath.Root.Kind)
+                {
+                    case GCRootKind.Pinning:
+                        hasStatic = true;
+                        break;
+                    case GCRootKind.LocalVar:
+                        hasThread = true;
+                        break;
+                }
             }
 
             Assert.True(hasThread);
@@ -301,7 +306,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
@@ -329,7 +334,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
-                ClrRuntime runtime = dataTarget.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();

@@ -24,7 +24,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     false);
 
                 Assert.NotNull(badDac);
-                Assert.Throws<InvalidOperationException>(() => dt.ClrVersions.Single().CreateRuntime(badDac));
+
+                ClrInfo info = dt.ClrVersions.SingleOrDefault();
+
+                Assert.NotNull(info);
+
+                Assert.Throws<InvalidOperationException>(() => info.CreateRuntime(badDac));
             }
         }
 
@@ -48,7 +53,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
-                ClrInfo info = dt.ClrVersions.Single();
+                ClrInfo info = dt.ClrVersions.SingleOrDefault();
+                Assert.NotNull(info);
+
                 ClrRuntime runtime = info.CreateRuntime();
 
                 Assert.Equal(info, runtime.ClrInfo);
@@ -62,9 +69,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
 
-                HashSet<string> expected = new HashSet<string>(new[] {"mscorlib.dll", "sharedlibrary.dll", "nestedexception.exe", "appdomains.exe"}, StringComparer.OrdinalIgnoreCase);
+                HashSet<string> expected = new HashSet<string>(
+                    new string[] {"mscorlib.dll", "sharedlibrary.dll", "nestedexception.exe", "appdomains.exe"},
+                    StringComparer.OrdinalIgnoreCase);
                 HashSet<ClrModule> modules = new HashSet<ClrModule>();
 
                 foreach (ClrModule module in runtime.Modules)

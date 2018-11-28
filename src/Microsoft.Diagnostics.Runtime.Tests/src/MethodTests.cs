@@ -15,9 +15,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             ulong[] methodDescs;
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
 
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
+                Assert.NotNull(module);
+                
                 ClrType type = module.GetTypeByName("Foo");
                 ClrMethod method = type.GetMethod("Bar");
                 methodDescs = method.EnumerateMethodDescs().ToArray();
@@ -27,7 +30,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
+                
                 ClrMethod method = runtime.GetMethodByHandle(methodDescs[0]);
 
                 Assert.NotNull(method);
@@ -37,7 +42,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
+                
                 ClrMethod method = runtime.GetMethodByHandle(methodDescs[1]);
 
                 Assert.NotNull(method);
@@ -52,9 +59,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             ulong methodDesc;
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
 
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
+                Assert.NotNull(module);
+                
                 ClrType type = module.GetTypeByName("Foo");
                 ClrMethod method = type.GetMethod("Bar");
                 methodDesc = method.EnumerateMethodDescs().Single();
@@ -64,7 +74,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
+                
                 ClrMethod method = runtime.GetMethodByHandle(methodDesc);
 
                 Assert.NotNull(method);
@@ -74,7 +86,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
 
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
                 ClrType type = module.GetTypeByName("Foo");
@@ -92,9 +105,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
-                ClrRuntime runtime = dt.ClrVersions.Single().CreateRuntime();
+                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
 
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
+                Assert.NotNull(module);
                 ClrType type = module.GetTypeByName("Foo");
 
                 ClrMethod genericMethod = type.GetMethod("GenericBar");
@@ -104,5 +119,5 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.Equal(')', methodName.Last());
             }
         }
-    }
+	}
 }

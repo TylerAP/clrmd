@@ -43,7 +43,7 @@ namespace Microsoft.Diagnostics.Runtime.DacInterface
             return count;
         }
 
-        private protected CallableCOMWrapper(RefCountedFreeLibrary library, ref Guid desiredInterface, IntPtr pUnknown)
+        internal CallableCOMWrapper(RefCountedFreeLibrary library, ref Guid desiredInterface, IntPtr pUnknown)
         {
             _library = library;
             _library.AddRef();
