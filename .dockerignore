@@ -1,0 +1,13 @@
+appveyor.yml
+Documentation
+artifacts
+eng
+src/Microsoft.Diagnostics.Runtime/obj
+src/Microsoft.Diagnostics.Runtime/bin
+src/Microsoft.Diagnostics.Runtime.Native/obj
+src/Microsoft.Diagnostics.Runtime.Native/bin
+src/Microsoft.Diagnostics.Runtime.Tests/obj
+src/Microsoft.Diagnostics.Runtime.Tests/bin
+src/Samples/*/obj
+src/Samples/*/bin
+src/TestTargets/bin

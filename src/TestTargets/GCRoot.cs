@@ -37,9 +37,19 @@ class GCRootTarget
 
         _dependent.Add(s, target);
         //s.Item1 = target;
+        try
+        {
+            throw new Exception();
+        }
+        catch
+        {
+            if (new object() != new object())
+            {
+                throw;
+            }
+        }
+
         GC.KeepAlive(target);
-        
-        throw new Exception();
     }
 }
 

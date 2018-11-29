@@ -6,7 +6,15 @@ class Program
     public static void Main(string[] args)
     {
         Foo foo = new Foo();
-        Outer();    /* seq */
+        try
+        {
+            Outer();    /* seq */
+        }
+        catch
+        {
+            if (new object() != new object())
+                throw;
+        }
         GC.KeepAlive(foo);
     }
 

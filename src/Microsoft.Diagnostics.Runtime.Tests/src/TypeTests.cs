@@ -23,7 +23,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrHeap heap = runtime.Heap;
                 Assert.NotNull(heap);
 
-                ClrModule typesExeModule = runtime.GetModule("types.exe");
+                ClrModule typesExeModule = runtime.GetModule("types.dll");
                 Assert.NotNull(typesExeModule);
                 
                 ClrStaticField field = typesExeModule.GetTypeByName("Types").GetStaticFieldByName("s_i");
@@ -295,10 +295,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.NotNull(runtime);
                 ClrHeap heap = runtime.Heap;
 
-                ulong[] fooObjects = (from obj in heap.EnumerateObjectAddresses()
-                                      let t = heap.GetObjectType(obj)
-                                      where t.Name == "Foo"
-                                      select obj).ToArray();
+                var objs = heap.EnumerateObjectAddresses().Select(addr => heap.GetObjectType(addr)).ToArray();
+
+                ulong[] fooObjects = heap.EnumerateObjectAddresses()
+                    .Where(obj => heap.GetObjectType(obj)?.Name == "Foo")
+                    .Select(obj => obj).ToArray();
 
                 // There are exactly two Foo objects in the process, one in each app domain.
                 // They will have different method tables.
@@ -307,9 +308,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrType fooType = heap.GetObjectType(fooObjects[0]);
                 Assert.NotSame(fooType, heap.GetObjectType(fooObjects[1]));
 
-                ClrRoot appDomainsFoo = (from root in heap.EnumerateRoots(true)
-                                         where root.Kind == GCRootKind.StaticVar && root.Type == fooType
-                                         select root).SingleOrDefault();
+                ClrRoot appDomainsFoo = heap
+                    .EnumerateRoots(true)
+                    .SingleOrDefault(root => root.Kind == GCRootKind.StaticVar && root.Type == fooType);
                 Assert.NotNull(appDomainsFoo);
 
                 ulong nestedExceptionFoo = fooObjects.SingleOrDefault(obj => obj != appDomainsFoo.Object);
@@ -354,7 +355,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.NotNull(sharedLibraryModule);
                 ClrType fooType = sharedLibraryModule.GetTypeByName("Foo");
                 
-                ClrModule typesExeModule = runtime.GetModule("types.exe");
+                ClrModule typesExeModule = runtime.GetModule("types.dll");
                 Assert.NotNull(typesExeModule);
                 ulong obj = (ulong)typesExeModule.GetTypeByName("Types").GetStaticFieldByName("s_foo").GetValue(runtime.AppDomains.Single());
 
@@ -396,7 +397,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrAppDomain domain = runtime.AppDomains.Single();
 
-                ClrModule typesModule = runtime.GetModule("types.exe");
+                ClrModule typesModule = runtime.GetModule("types.dll");
                 ClrType type = heap.GetTypeByName("Types");
 
                 ulong s_array = (ulong)type.GetStaticFieldByName("s_array").GetValue(domain);
@@ -432,7 +433,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrAppDomain domain = runtime.AppDomains.Single();
 
-                ClrModule typesModule = runtime.GetModule("types.exe");
+                ClrModule typesModule = runtime.GetModule("types.dll");
                 ClrType type = heap.GetTypeByName("Types");
 
                 ulong s_array = (ulong)type.GetStaticFieldByName("s_array").GetValue(domain);
@@ -453,7 +454,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrAppDomain domain = runtime.AppDomains.Single();
 
-                ClrModule typesModule = runtime.GetModule("types.exe");
+                ClrModule typesModule = runtime.GetModule("types.dll");
                 ClrType type = heap.GetTypeByName("Types");
 
                 ulong s_array = (ulong)type.GetStaticFieldByName("s_array").GetValue(domain);

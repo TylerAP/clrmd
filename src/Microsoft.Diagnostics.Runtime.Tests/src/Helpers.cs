@@ -30,7 +30,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
         public static ClrModule GetMainModule(this ClrRuntime runtime)
         {
-            return runtime.Modules.Single(m => m.FileName.EndsWith(".exe"));
+            return runtime.Modules.First();
+            //return runtime.Modules.Single(m => m.FileName.EndsWith(".exe"));
         }
 
         public static ClrMethod GetMethod(this ClrType type, string name)

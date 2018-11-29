@@ -4,45 +4,40 @@
         <TargetFramework>netcoreapp2.1</TargetFramework>
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\..\..\eng\Microsoft.Diagnostics.Runtime.snk</AssemblyOriginatorKeyFile>
         <IsPackable>false</IsPackable>
+        <BuildInParallel>false</BuildInParallel>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
-        <PackageReference Include="xunit" Version="2.4.0" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+        <PackageReference Include="JetBrains.Annotations" Version="2018.2.1"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0"/>
+        <PackageReference Include="xunit" Version="2.4.0"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0"/>
     </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\TestTargets\**\*.*">
+    <ItemGroup>
+        <None Include="..\TestTargets\*.cs">
       <Link>data\%(RecursiveDir)%(Filename)%(Extension)</Link>
-    </None>
-  </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime.Native\Microsoft.Diagnostics.Runtime.Native.csproj" />
-        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.csproj" />
+        </None>
+        <None Include="..\TestTargets\Shared\*.cs">
+            <Link>TestTargets\Shared\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </None>
     </ItemGroup>
 
-    <PropertyGroup>
-        <DefaultWindowsSDKPath>$(MSBuildProgramFiles32)\Windows Kits\10</DefaultWindowsSDKPath>
-        <WindowsSDKPath Condition="'$(WindowsSDKPath)'==''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0@InstallationFolder)</WindowsSDKPath>
-        <WindowsSDKPath Condition="'$(WindowsSDKPath)'==''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0@InstallationFolder)</WindowsSDKPath>
-        <WindowsSDKPath Condition="'$(WindowsSDKPath)'=='' AND Exists('$(DefaultWindowsSDKPath)')">$(DefaultWindowsSDKPath)</WindowsSDKPath>
-    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime.Native\Microsoft.Diagnostics.Runtime.Native.csproj"/>
+        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.csproj"/>
+    </ItemGroup>
 
+    <Target Name="StartCreateTestTargets" BeforeTargets="Build" Condition="'$(OS)'=='Windows_NT'">
+        <Message Text="Creating Test Targets..."/>
 
-    <Target Name="StartCreateTestTargets" BeforeTargets="Build">
-        <Message Text="Creating Test Targets..." />
-        <Error Condition="'$(WindowsSDKPath)'==''" Text="Windows SDK not found." />
-        <Error Condition="!Exists('$(WindowsSDKPath)/Debuggers/x86/cdb.exe')" Text="Windows SDK appears to be missing Debugging Tools for Windows (x86) component." />
-        <Error Condition="!Exists('$(WindowsSDKPath)/Debuggers/x64/cdb.exe')" Text="Windows SDK appears to be missing Debugging Tools for Windows (x64) component." />
-        <Message Text="Using Windows SDK: $(WindowsSDKPath)" />
-        <GetReferenceAssemblyPaths BypassFrameworkInstallChecks="False" TargetFrameworkMoniker=".NETFramework,Version=v4.0">
-            <Output TaskParameter="FullFrameworkReferenceAssemblyPaths" PropertyName="NetFramework40RefAsmPath" />
+        <GetReferenceAssemblyPaths BypassFrameworkInstallChecks="False" TargetFrameworkMoniker=".NETFramework,Version=v4.0" Condition="'$(OS)'=='Windows_NT'">
+            <Output TaskParameter="FullFrameworkReferenceAssemblyPaths" PropertyName="ReferenceAssembliesPath"/>
         </GetReferenceAssemblyPaths>
-        <Error Condition="'$(NetFramework40RefAsmPath)'==''" Text="Missing path to .NET Framework v4.0 reference assemblies." />
+        <!-- TODO: linux support -->
+        <Error Condition="'$(ReferenceAssembliesPath)'==''" Text="Missing path to reference assemblies."/>
         <ItemGroup>
-            <TestTargetSharedLibrarySource Include="../TestTargets/Shared/SharedLibrary.cs" />
+            <TestTargetSharedLibrarySource Include="../TestTargets/Shared/SharedLibrary.cs"/>
         </ItemGroup>
         <PropertyGroup>
 
@@ -52,30 +47,49 @@
             <TestTargetBinDirectory>$(TestTargetBaseDirectory)bin/</TestTargetBinDirectory>
             <TestTargetBin32Directory>$(TestTargetBinDirectory)x86/</TestTargetBin32Directory>
             <TestTargetBin64Directory>$(TestTargetBinDirectory)x64/</TestTargetBin64Directory>
-            <TestTargetBinILDirectory>$(TestTargetBinDirectory)Any CPU/</TestTargetBinILDirectory>
+            <TestTargetBinILDirectory>$(TestTargetBinDirectory)AnyCPU/</TestTargetBinILDirectory>
 
         </PropertyGroup>
 
-        <MakeDir Directories="$(TestTargetBin32Directory);$(TestTargetBin64Directory);$(TestTargetBinILDirectory)" />
+        <MakeDir Directories="$(TestTargetBin32Directory);$(TestTargetBin64Directory);$(TestTargetBinILDirectory)"/>
 
-        <Csc Condition="!Exists('$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll')" Platform="anycpu" Deterministic="true" TargetType="library" EmitDebugInformation="true" NoStandardLib="true" AdditionalLibPaths="$(NetFramework40RefAsmPath)" References="mscorlib.dll;System.dll;System.Core.dll" PdbFile="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" OutputAssembly="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" Sources="%(TestTargetSharedLibrarySource.FullPath)" ContinueOnError="false" />
+        <MSBuild
+                Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+                Targets="Restore;Build"
+                RunEachTargetSeparately="false"
+                Properties="Platform=AnyCPU;Configuration=Release;OutputType=library;SourceFile=Shared/SharedLibrary.cs"
+                BuildInParallel="false"
+                ContinueOnError="false"
+        />
     </Target>
-    <Target Name="CreateTestTargets" AfterTargets="StartCreateTestTargets" BeforeTargets="Build">
-        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)" />
-        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)" />
-        <Error Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x86." />
-        <Error Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x64." />
+    <Target Name="CreateTestTargets" AfterTargets="StartCreateTestTargets" BeforeTargets="Build" DependsOnTargets="StartCreateTestTargets" Condition="'$(OS)'=='Windows_NT'">
+        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)"/>
+        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)"/>
+        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)"/>
+        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)"/>
+        <Error Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x86."/>
+        <Error Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x64."/>
         <ItemGroup>
-            <TestTargetSources Include="../TestTargets/*.cs" />
+            <TestTargetSources Include="../TestTargets/*.cs"/>
         </ItemGroup>
-        <Csc Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).exe')" Platform="x86" Deterministic="true" TargetType="exe" EmitDebugInformation="true" NoStandardLib="true" AdditionalLibPaths="$(NetFramework40RefAsmPath)" References="$(TestTargetBinILDirectory)SharedLibrary.dll;mscorlib.dll;System.dll;System.Core.dll" AllowUnsafeBlocks="true" PdbFile="$(TestTargetBin32Directory)%(TestTargetSources.Filename).pdb" OutputAssembly="$(TestTargetBin32Directory)%(TestTargetSources.Filename).exe" Sources="%(TestTargetSources.FullPath)" />
-        <Csc Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename).exe')" Platform="x64" Deterministic="true" EmitDebugInformation="true" NoStandardLib="true" AdditionalLibPaths="$(NetFramework40RefAsmPath)" References="$(TestTargetBinILDirectory)SharedLibrary.dll;mscorlib.dll;System.dll;System.Core.dll" AllowUnsafeBlocks="true" PdbFile="$(TestTargetBin64Directory)%(TestTargetSources.Filename).pdb" OutputAssembly="$(TestTargetBin64Directory)%(TestTargetSources.Filename).exe" Sources="%(TestTargetSources.FullPath)" />
-    </Target>
-    <Target Name="CreateTestTargetsDumps" AfterTargets="CreateTestTargets" BeforeTargets="Build">
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x86\cdb.exe&quot; -g -G -c &quot;.dump /ma $(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename)_wks.dmp;.dump /ma $(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename)_wks.dmp;.dump /m $(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename)_wks_mini.dmp;q&quot; &quot;$(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename).exe&quot;" Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename)_wks.dmp')" />
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x64\cdb.exe&quot; -g -G -c &quot;.dump /ma $(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename)_wks.dmp;.dump /ma $(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename)_wks.dmp;.dump /m $(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename)_wks_mini.dmp;q&quot; &quot;$(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename).exe&quot;" Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename)_wks.dmp')" />
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x86\cdb.exe&quot; -g -G -c &quot;.dump /ma $(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename)_svr.dmp;.dump /ma $(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename)_svr.dmp;.dump /m $(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename)_svr_mini.dmp;q&quot; &quot;$(TestTargetBin32Directory.Replace('/','\'))%(TestTargetSources.Filename).exe&quot;" Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename)_svr.dmp')" EnvironmentVariables="COMPLUS_BuildFlavor=SVR" />
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x64\cdb.exe&quot; -g -G -c &quot;.dump /ma $(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename)_svr.dmp;.dump /ma $(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename)_svr.dmp;.dump /m $(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename)_svr_mini.dmp;q&quot; &quot;$(TestTargetBin64Directory.Replace('/','\'))%(TestTargetSources.Filename).exe&quot;" Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename)_svr.dmp')" EnvironmentVariables="COMPLUS_BuildFlavor=SVR" />
+
+        <MSBuild Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll')"
+                 Targets="Restore;Build"
+                 RunEachTargetSeparately="false"
+                 Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+                 Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)"
+                 BuildInParallel="false"
+                 ContinueOnError="false"
+        />
+
+        <MSBuild Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename).dll')"
+                 Targets="Restore;Build"
+                 RunEachTargetSeparately="false"
+                 Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+                 BuildInParallel="false"
+                 ContinueOnError="false"
+                 Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)"
+        />
     </Target>
 
 </Project>

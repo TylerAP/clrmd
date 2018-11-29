@@ -15,7 +15,7 @@ class Program
 
         AppDomain domain = AppDomain.CreateDomain("Second AppDomain");
 
-        domain.ExecuteAssembly(Path.Combine(Path.GetDirectoryName(codebase), "NestedException.exe"));
+        domain.ExecuteAssembly(Path.Combine(Path.GetDirectoryName(codebase), "NestedException.dll"));
 
         while (true)
             Thread.Sleep(250);

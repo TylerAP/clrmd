@@ -14,10 +14,19 @@ class Types
 
     public static void Main(string[] args)
     {
+        GC.TryStartNoGCRegion(81908, true);
         Foo f = new Foo();
         Foo[] foos = new Foo[] { f };
 
-        Inner();
+        try
+        {
+            Inner();
+        }
+        catch
+        {
+            if (new object() != new object())
+                throw;
+        }
 
         GC.KeepAlive(foos);
     }

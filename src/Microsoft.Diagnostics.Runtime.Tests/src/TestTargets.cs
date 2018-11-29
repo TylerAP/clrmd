@@ -68,7 +68,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             if (!File.Exists(Source))
                 throw new FileNotFoundException($"Could not find source file: {source}");
 
-            Executable = Path.Combine(Path.GetDirectoryName(Source), "bin", Architecture, Path.ChangeExtension(source, ".exe"));
+            Executable = Path.Combine(Path.GetDirectoryName(Source), "bin", Architecture, Path.ChangeExtension(source, ".dll"));
             Pdb = Path.ChangeExtension(Executable, ".pdb");
 
             if (!File.Exists(Executable) || !File.Exists(Pdb))

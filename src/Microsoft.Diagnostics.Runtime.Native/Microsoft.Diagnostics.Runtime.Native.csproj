@@ -20,13 +20,6 @@
     <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NET45</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
-    <DefineConstants>TRACE;NET45</DefineConstants>
-    <DocumentationFile>Microsoft.Diagnostics.Runtime.Native.xml</DocumentationFile>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DocumentationFile>bin\Debug\Microsoft.Diagnostics.Runtime.Native.xml</DocumentationFile>
   </PropertyGroup>
@@ -48,6 +41,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" PrivateAssets="All" />
   </ItemGroup>
 </Project>

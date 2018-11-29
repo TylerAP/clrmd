@@ -24,10 +24,21 @@ class GCHandles
         string weakLong = "weakLong";
         GCHandle.Alloc(weak, GCHandleType.WeakTrackResurrection);
 
+        
+        try
+        {
+            throw new Exception();
+        }
+        catch
+        {
+            if (new object() != new object())
+            {
+                throw;
+            }
+        }
+
         GC.KeepAlive(nativeOverlapped);
         GC.KeepAlive(weak);
         GC.KeepAlive(weakLong);
-
-        throw new Exception();
     }
 }
