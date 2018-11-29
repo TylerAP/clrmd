@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace Microsoft.Diagnostics.Runtime.Desktop
 {
@@ -145,17 +147,34 @@ namespace Microsoft.Diagnostics.Runtime.Desktop
 
         private ClrModule GetMscorlib()
         {
-            foreach (ClrModule module in _runtime.Modules)
-                if (module.AssemblyName.Contains("mscorlib.dll"))
-                    return module;
+            var modAsms = _runtime.Modules
+                .Select(mod => new { Module = mod, AssemblyName = new AssemblyName(mod.AssemblyName).Name })
+                .ToArray();
 
-            // Uh oh, this shouldn't have happened.  Let's look more carefully (slowly).
-            foreach (ClrModule module in _runtime.Modules)
-                if (module.AssemblyName.ToLower().Contains("mscorlib"))
-                    return module;
+            // TODO: check if .NET core
 
-            // Ok...not sure why we couldn't find it.
-            return null;
+            /*
+            if (IsNetCore())
+            {
+                return modAsms
+                    .FirstOrDefault(ma => ma.AssemblyName == "System.Private.CoreLib")
+                    ?.Module;
+            }
+            else
+            {
+                return modAsms
+                    .FirstOrDefault(ma => ma.AssemblyName == "mscorlib")
+                    ?.Module;
+            }
+            */
+            
+            return modAsms
+                    .FirstOrDefault(ma => ma.AssemblyName == "mscorlib")
+                    ?.Module
+                ??
+                modAsms
+                    .FirstOrDefault(ma => ma.AssemblyName == "System.Private.CoreLib")
+                    ?.Module;
         }
 
         private bool GetFieldObject(ClrType type, ulong obj, string fieldName, out ClrType valueType, out ulong value)
