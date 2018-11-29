@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using static Microsoft.Diagnostics.Runtime.ICorDebug.PlatformHelper;
 
 namespace Microsoft.Diagnostics.Runtime.ICorDebug
 {
@@ -80,31 +82,44 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
             List<CLRRuntimeInfo> runtimes = new List<CLRRuntimeInfo>();
             IEnumUnknown enumRuntimes;
 
-            using (ProcessSafeHandle hProcess = NativeMethods.OpenProcess(
-                /*
-                (int)(NativeMethods.ProcessAccessOptions.ProcessVMRead |
-                                                                        NativeMethods.ProcessAccessOptions.ProcessQueryInformation |
-                                                                        NativeMethods.ProcessAccessOptions.ProcessDupHandle |
-                                                                        NativeMethods.ProcessAccessOptions.Synchronize),
-                 **/
-                // TODO FIX NOW for debugging. 
-                0x1FFFFF, // PROCESS_ALL_ACCESS
-                false, // inherit handle
-                processId))
+
+            if (IsWindows)
             {
-                if (hProcess.IsInvalid)
+
+                using (ProcessSafeHandle hProcess = WindowsNativeMethods.OpenProcess(
+                    /*
+                    (int)(NativeMethods.ProcessAccessOptions.ProcessVMRead |
+                                                                            NativeMethods.ProcessAccessOptions.ProcessQueryInformation |
+                                                                            NativeMethods.ProcessAccessOptions.ProcessDupHandle |
+                                                                            NativeMethods.ProcessAccessOptions.Synchronize),
+                     **/
+                    // TODO FIX NOW for debugging. 
+                    0x1FFFFF, // PROCESS_ALL_ACCESS
+                    false, // inherit handle
+                    processId))
                 {
+                    if (hProcess.IsInvalid)
+                    {
                     throw new Win32Exception(Marshal.GetLastWin32Error());
+                    }
+
+                    enumRuntimes = m_metaHost.EnumerateLoadedRuntimes(hProcess);
                 }
 
-                enumRuntimes = m_metaHost.EnumerateLoadedRuntimes(hProcess);
+                // Since we're only getting one at a time, we can pass NULL for count.
+                // S_OK also means we got the single element we asked for.
+                for (object oIUnknown; enumRuntimes.Next(1, out oIUnknown, IntPtr.Zero) == 0; /* empty */)
+                {
+                    runtimes.Add(new CLRRuntimeInfo(oIUnknown));
+                }
             }
-
-            // Since we're only getting one at a time, we can pass NULL for count.
-            // S_OK also means we got the single element we asked for.
-            for (object oIUnknown; enumRuntimes.Next(1, out oIUnknown, IntPtr.Zero) == 0; /* empty */)
+            else
             {
-                runtimes.Add(new CLRRuntimeInfo(oIUnknown));
+                
+                var process = Process.GetProcessById(processId);
+                var hProcess = new ProcessSafeHandle(process.Handle, true);
+
+                enumRuntimes = m_metaHost.EnumerateLoadedRuntimes(hProcess);
             }
 
             return runtimes;

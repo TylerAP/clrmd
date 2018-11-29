@@ -8,23 +8,30 @@
     <Description>ClrMD is a set of advanced APIs for programmatically inspecting a crash dump of a .NET program much in the same way that the SOS Debugging Extensions (SOS) do. This allows you to write automated crash analysis for your applications as well as automate many common debugger tasks. In addition to reading crash dumps ClrMD also allows supports attaching to live processes.</Description>
     <PackageReleaseNotes>- Fixed a major issue enumerating stack references on x86.  (Stack imbalance would potentially lead to stack corruption.)
 - A large refactoring cleanup was implemented in the codebase.  This release ensures a new baseline.</PackageReleaseNotes>
-    <PackageTags/>
+    <PackageTags>Managed,Debugger,Dump,Minidump,Attach</PackageTags>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\..\..\eng\Microsoft.Diagnostics.Runtime.snk</AssemblyOriginatorKeyFile>
-    <RepositoryUrl>https://github.com/Microsoft/clrmd</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Microsoft/clrmd.git</RepositoryUrl>
     <AssemblyVersion>1.0.1.0</AssemblyVersion>
     <FileVersion>1.0.1.0</FileVersion>
     <Version>1.0.1-dev</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
+    <Authors>Lee Culver &lt;lee.culver@microsoft.com&gt;</Authors>
+    <PackageProjectUrl>https://github.com/Microsoft/clrmd</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Microsoft/clrmd/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>bin\Debug\Microsoft.Diagnostics.Runtime.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE</DefineConstants>
     <DocumentationFile>Microsoft.Diagnostics.Runtime.xml</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,6 +44,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" PrivateAssets="All">
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ICorDebug" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ICorDebug\IMetaHostWrappers.cs" />
   </ItemGroup>
 </Project>

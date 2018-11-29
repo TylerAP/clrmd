@@ -77,7 +77,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [CanBeNull]
         public static ClrStackFrame GetFrame(this ClrThread thread, string functionName)
         {
-            return thread.StackTrace.Where(sf => sf.Method != null ? sf.Method.Name == functionName : false).SingleOrDefault();
+            return thread.StackTrace.SingleOrDefault(sf => sf.Method != null && sf.Method.Name == functionName);
         }
 
         public static string TestWorkingDirectory

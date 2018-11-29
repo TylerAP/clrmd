@@ -11,12 +11,12 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
 {
     internal class ProcessSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
-        private ProcessSafeHandle()
+        internal ProcessSafeHandle()
             : base(true)
         {
         }
 
-        private ProcessSafeHandle(IntPtr handle, bool ownsHandle)
+        internal ProcessSafeHandle(IntPtr handle, bool ownsHandle)
             : base(ownsHandle)
         {
             SetHandle(handle);
@@ -24,7 +24,7 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
 
         protected override bool ReleaseHandle()
         {
-            return NativeMethods.CloseHandle(handle);
+            return WindowsNativeMethods.CloseHandle(handle);
         }
     }
 }
