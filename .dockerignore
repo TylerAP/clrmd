@@ -11,3 +11,4 @@ src/Microsoft.Diagnostics.Runtime.Tests/bin
 src/Samples/*/obj
 src/Samples/*/bin
 src/TestTargets/bin
+src/TestTargets/obj

@@ -41,6 +41,41 @@
         <WindowsSDKPath>$([MSBuild]::EnsureTrailingSlash('$(WindowsSDKPath)'))</WindowsSDKPath>
     </PropertyGroup>
 
+    <Target Name="CreateTestTargetsDumpsNonWin" AfterTargets="Build" Condition="'$(OutputType)'!='library' AND '$(OS)'!='Windows_NT'">
+        <!-- /usr/share/dotnet/shared/Microsoft.NETCore.App/*/createdump -->
+
+        <PropertyGroup>
+            <TargetDumpFileName>$(TargetDir)$(TargetName)</TargetDumpFileName>
+        </PropertyGroup>
+        
+        <ItemGroup>
+            <CreateDumpExecutable Include="/usr/share/dotnet/shared/Microsoft.NETCore.App/$(BundledNETCoreAppPackageVersion)/createdump" />
+        </ItemGroup>
+
+        <Message Text="Generating dumps for $(TargetPath)" />
+
+        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_wks_mini_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_mini_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=1;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputWksMini" />
+        </Exec>
+
+        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_wks_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputWks" />
+        </Exec>
+
+        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_svr_mini_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_mini_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=1;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvrMini" />
+        </Exec>
+
+        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_svr_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
+            <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvr" />
+        </Exec>
+
+        <Error Condition="!Exists('$(TargetDumpFileName)_wks_mini_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_wks_mini_xplat.dmp'&#10;'$(TargetOutputWksMini.Replace(';','&#10;'))" />
+        <Error Condition="!Exists('$(TargetDumpFileName)_wks_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_wks_xplat.dmp'&#10;'$(TargetOutputWks.Replace(';','&#10;'))" />
+        <Error Condition="!Exists('$(TargetDumpFileName)_svr_mini_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_svr_mini_xplat.dmp'&#10;'$(TargetOutputSvrMini.Replace(';','&#10;'))" />
+        <Error Condition="!Exists('$(TargetDumpFileName)_svr_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_svr_xplat.dmp'&#10;'$(TargetOutputSvr.Replace(';','&#10;'))" />
+    </Target>
+    
     <Target Name="CreateTestTargetsDumps" AfterTargets="Build" Condition="'$(OutputType)'!='library' AND '$(OS)'=='Windows_NT'">
         <Error Condition="!Exists('$(TargetPath)')" Text="$(TargetName) assembly missing."/>
         <Error Condition="'$(WindowsSDKPath)'==''" Text="Windows SDK not found."/>
@@ -62,6 +97,8 @@
         <Error Condition="!Exists('$(DotNet32Path)')" Text="Windows SDK appears to be missing Debugging Tools for Windows (x86) component." />
         <Error Condition="!Exists('$(DotNet64Path)')" Text="Windows SDK appears to be missing Debugging Tools for Windows (x64) component." />
 
+        <Message Text="Generating dumps for $(TargetPath)" />
+        
         <Exec Command="&quot;$(Cdb32Path)&quot; -g -G -c &quot;.dump /o /mA $(TargetDumpFileName)_wks.dmp;.dump /o /m $(TargetDumpFileName)_wks_mini.dmp;q&quot; &quot;$(DotNet32Path)&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" Condition="'$(Platform)'=='x86'"/>
         <Exec Command="&quot;$(Cdb64Path)&quot; -g -G -c &quot;.dump /o /mA $(TargetDumpFileName)_wks.dmp;.dump /o /m $(TargetDumpFileName)_wks_mini.dmp;q&quot; &quot;$(DotNet64Path)&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" Condition="'$(Platform)'=='x64'"/>
 

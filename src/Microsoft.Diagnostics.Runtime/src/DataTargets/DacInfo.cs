@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Runtime.InteropServices;
 
 #pragma warning disable 0618
 
@@ -19,21 +20,22 @@ namespace Microsoft.Diagnostics.Runtime
         /// </summary>
         public static string GetDacRequestFileName(ClrFlavor flavor, Architecture currentArchitecture, Architecture targetArchitecture, VersionInfo clrVersion)
         {
-            string dacName = flavor == ClrFlavor.Core ? "mscordaccore" : "mscordacwks";
-            return string.Format(
-                "{0}_{1}_{2}_{3}.{4}.{5}.{6:D2}.dll",
-                dacName,
-                currentArchitecture,
-                targetArchitecture,
-                clrVersion.Major,
-                clrVersion.Minor,
-                clrVersion.Revision,
-                clrVersion.Patch);
+            string dacName = flavor == ClrFlavor.Core
+                ? "mscordaccore"
+                : "mscordacwks";
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? $"{dacName}_{currentArchitecture}_{targetArchitecture}_{clrVersion.Major}.{clrVersion.Minor}.{clrVersion.Revision}.{clrVersion.Patch:D2}.dll"
+                : $"lib{dacName}_{currentArchitecture}_{targetArchitecture}_{clrVersion.Major}.{clrVersion.Minor}.{clrVersion.Revision}.{clrVersion.Patch:D2}.so";
         }
 
-        internal static string GetDacFileName(ClrFlavor flavor, Architecture targetArchitecture)
-        {
-            return flavor == ClrFlavor.Core ? "mscordaccore.dll" : "mscordacwks.dll";
+        internal static string GetDacFileName(ClrFlavor flavor, Runtime.Architecture targetArchitecture) {
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? flavor == ClrFlavor.Core
+                    ? "mscordaccore.dll"
+                    : "mscordacwks.dll"
+                : flavor == ClrFlavor.Core
+                    ? "libmscordaccore.so"
+                    : "libmscordacwks.so";
         }
 
         /// <summary>

@@ -28,14 +28,9 @@
         <ProjectReference Include="..\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.csproj"/>
     </ItemGroup>
 
-    <Target Name="StartCreateTestTargets" BeforeTargets="Build" Condition="'$(OS)'=='Windows_NT'">
+    <Target Name="StartCreateTestTargets" BeforeTargets="Build">
         <Message Text="Creating Test Targets..."/>
 
-        <GetReferenceAssemblyPaths BypassFrameworkInstallChecks="False" TargetFrameworkMoniker=".NETFramework,Version=v4.0" Condition="'$(OS)'=='Windows_NT'">
-            <Output TaskParameter="FullFrameworkReferenceAssemblyPaths" PropertyName="ReferenceAssembliesPath"/>
-        </GetReferenceAssemblyPaths>
-        <!-- TODO: linux support -->
-        <Error Condition="'$(ReferenceAssembliesPath)'==''" Text="Missing path to reference assemblies."/>
         <ItemGroup>
             <TestTargetSharedLibrarySource Include="../TestTargets/Shared/SharedLibrary.cs"/>
         </ItemGroup>
@@ -62,7 +57,7 @@
                 ContinueOnError="false"
         />
     </Target>
-    <Target Name="CreateTestTargets" AfterTargets="StartCreateTestTargets" BeforeTargets="Build" DependsOnTargets="StartCreateTestTargets" Condition="'$(OS)'=='Windows_NT'">
+    <Target Name="CreateTestTargets" AfterTargets="StartCreateTestTargets" BeforeTargets="Build" DependsOnTargets="StartCreateTestTargets">
         <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)"/>
         <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)"/>
         <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)"/>
@@ -73,7 +68,7 @@
             <TestTargetSources Include="../TestTargets/*.cs"/>
         </ItemGroup>
 
-        <MSBuild Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll')"
+        <MSBuild Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll') AND '$(OS)'=='Windows_NT'"
                  Targets="Restore;Build"
                  RunEachTargetSeparately="false"
                  Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"

@@ -164,7 +164,7 @@ namespace Microsoft.Diagnostics.Runtime
         }
 
         [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-        [DllImport("dbgeng.dll")]
+        [DllImport("dbgeng")]
         public static extern uint DebugCreate(ref Guid InterfaceId, [MarshalAs(UnmanagedType.IUnknown)] out object Interface);
 
         public void Close()
