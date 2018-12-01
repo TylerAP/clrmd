@@ -3,8 +3,8 @@
     <PropertyGroup>
         <SourceFileNameWithoutExtension>$([System.IO.Path]::GetFileNameWithoutExtension('$(SourceFile)'))</SourceFileNameWithoutExtension>
     </PropertyGroup>
-    
-    
+
+
     <PropertyGroup>
         <OutputType Condition="'$(OutputType)'!=''">Exe</OutputType>
         <Configuration>Release</Configuration>
@@ -20,44 +20,60 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Remove="**/*" />
-        <Compile Remove="**/*" />
-        <Resource Remove="**/*" />
-        <Compile Include="$(SourceFile)" Condition="'$(SourceFile)'!=''" />
+        <None Remove="**/*"/>
+        <Compile Remove="**/*"/>
+        <Resource Remove="**/*"/>
+        <Compile Include="$(SourceFile)" Condition="'$(SourceFile)'!=''"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(OutputType)'!='library'">
-      <Reference Include="SharedLibrary, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>bin\AnyCPU\SharedLibrary.dll</HintPath>
-      </Reference>
+        <Reference Include="SharedLibrary, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <HintPath>bin\AnyCPU\SharedLibrary.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 
     <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
-        <DefaultWindowsSDKPath>$(MSBuildProgramFiles32)\Windows Kits\10</DefaultWindowsSDKPath>
+        <DefaultWindowsSDKPath>$(MSBuildProgramFiles32)\Windows Kits\10\</DefaultWindowsSDKPath>
         <WindowsSDKPath Condition="'$(WindowsSDKPath)'==''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0@InstallationFolder)</WindowsSDKPath>
         <WindowsSDKPath Condition="'$(WindowsSDKPath)'==''">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0@InstallationFolder)</WindowsSDKPath>
         <WindowsSDKPath Condition="'$(WindowsSDKPath)'=='' AND Exists('$(DefaultWindowsSDKPath)')">$(DefaultWindowsSDKPath)</WindowsSDKPath>
+        <WindowsSDKPath>$([MSBuild]::EnsureTrailingSlash('$(WindowsSDKPath)'))</WindowsSDKPath>
     </PropertyGroup>
 
     <Target Name="CreateTestTargetsDumps" AfterTargets="Build" Condition="'$(OutputType)'!='library' AND '$(OS)'=='Windows_NT'">
-        <Error Condition="!Exists('$(TargetPath)')" Text="$(TargetName) assembly missing." />
-        <Error Condition="'$(WindowsSDKPath)'==''" Text="Windows SDK not found." />
-        <Error Condition="!Exists('$(WindowsSDKPath)/Debuggers/$(Platform)/cdb.exe')" Text="Windows SDK appears to be missing Debugging Tools for Windows ($(Platform)) component." />
-        <Message Text="Using Windows SDK: $(WindowsSDKPath)" />
+        <Error Condition="!Exists('$(TargetPath)')" Text="$(TargetName) assembly missing."/>
+        <Error Condition="'$(WindowsSDKPath)'==''" Text="Windows SDK not found."/>
+        
+        <PropertyGroup>
+            <DotNet32Path Condition="'$(DotNet32Path)'==''">$(MsBuildProgramFiles32)\dotnet\dotnet.exe</DotNet32Path>
+            <DotNet64Path Condition="'$(DotNet64Path)'==''">$(ProgramW6432)\dotnet\dotnet.exe</DotNet64Path>
+        </PropertyGroup>
+        
+        <PropertyGroup>
+            <TargetDumpFileDir>$(TargetDir.Replace('/','\'))</TargetDumpFileDir>
+            <TargetDumpFileName>$(TargetDumpFileDir)$(TargetName)</TargetDumpFileName>
+            <Cdb32Path>$(WindowsSDKPath)Debuggers\x86\cdb.exe</Cdb32Path>
+            <Cdb64Path>$(WindowsSDKPath)Debuggers\x64\cdb.exe</Cdb64Path>
+        </PropertyGroup>
 
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x86\cdb.exe&quot; -g -G -c &quot;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_wks.dmp;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_wks.dmp;.dump /o /m $(TargetDir.Replace('/','\'))$(TargetName)_wks_mini.dmp;q&quot; &quot;$(MsBuildProgramFiles32)\dotnet\dotnet.exe&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" Condition="'$(Platform)'=='x86'"/>
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x64\cdb.exe&quot; -g -G -c &quot;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_wks.dmp;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_wks.dmp;.dump /o /m $(TargetDir.Replace('/','\'))$(TargetName)_wks_mini.dmp;q&quot; &quot;$(ProgramW6432)\dotnet\dotnet.exe&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" Condition="'$(Platform)'=='x64'"/>
+        <Error Condition="!Exists('$(DotNet32Path)')" Text="32-bit dotnet.exe (DotNet32Path) not found." />
+        <Error Condition="!Exists('$(DotNet64Path)')" Text="64-bit dotnet.exe (DotNet64Path) not found." />
+        <Error Condition="!Exists('$(DotNet32Path)')" Text="Windows SDK appears to be missing Debugging Tools for Windows (x86) component." />
+        <Error Condition="!Exists('$(DotNet64Path)')" Text="Windows SDK appears to be missing Debugging Tools for Windows (x64) component." />
 
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x86\cdb.exe&quot; -g -G -c &quot;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_svr.dmp;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_svr.dmp;.dump /o /m $(TargetDir.Replace('/','\'))$(TargetName)_svr_mini.dmp;q&quot; &quot;$(MsBuildProgramFiles32)\dotnet\dotnet.exe&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" Condition="'$(Platform)'=='x86'"/>
-        <Exec Command="&quot;$(WindowsSDKPath)\Debuggers\x64\cdb.exe&quot; -g -G -c &quot;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_svr.dmp;.dump /o /mA $(TargetDir.Replace('/','\'))$(TargetName)_svr.dmp;.dump /o /m $(TargetDir.Replace('/','\'))$(TargetName)_svr_mini.dmp;q&quot; &quot;$(ProgramW6432)\dotnet\dotnet.exe&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" Condition="'$(Platform)'=='x64'"/>
+        <Exec Command="&quot;$(Cdb32Path)&quot; -g -G -c &quot;.dump /o /mA $(TargetDumpFileName)_wks.dmp;.dump /o /m $(TargetDumpFileName)_wks_mini.dmp;q&quot; &quot;$(DotNet32Path)&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" Condition="'$(Platform)'=='x86'"/>
+        <Exec Command="&quot;$(Cdb64Path)&quot; -g -G -c &quot;.dump /o /mA $(TargetDumpFileName)_wks.dmp;.dump /o /m $(TargetDumpFileName)_wks_mini.dmp;q&quot; &quot;$(DotNet64Path)&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" Condition="'$(Platform)'=='x64'"/>
+
+        <Exec Command="&quot;$(Cdb32Path)&quot; -g -G -c &quot;.dump /o /mA $(TargetDumpFileName)_svr.dmp;.dump /o /m $(TargetDumpFileName)_svr_mini.dmp;q&quot; &quot;$(DotNet32Path)&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" Condition="'$(Platform)'=='x86'"/>
+        <Exec Command="&quot;$(Cdb64Path)&quot; -g -G -c &quot;.dump /o /mA $(TargetDumpFileName)_svr.dmp;.dump /o /m $(TargetDumpFileName)_svr_mini.dmp;q&quot; &quot;$(DotNet64Path)&quot; &quot;$(TargetPath)&quot;" EnvironmentVariables="COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" Condition="'$(Platform)'=='x64'"/>
     </Target>
-    
+
     <Target Name="IncrementalCleanHack" AfterTargets="_CleanGetCurrentAndPriorFileWrites" BeforeTargets="IncrementalClean">
         <ItemGroup>
-            <_CleanPriorFileWrites Remove="$(TargetDir)/**/*.pdb"/>
-            <_CleanPriorFileWrites Remove="$(TargetDir)/**/*.dll"/>
-            <_CleanPriorFileWrites Remove="$(TargetDir)/**/*.exe"/>
+            <_CleanPriorFileWrites Remove="$(TargetPath)"/>
+            <_CleanPriorFileWrites Remove="$(TargetDir)/*"/>
+            <_CleanPriorFileWrites Remove="$(TargetDir)/**/*"/>
         </ItemGroup>
     </Target>
 
