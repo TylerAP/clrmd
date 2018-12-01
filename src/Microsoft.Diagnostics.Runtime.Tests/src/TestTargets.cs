@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -78,13 +79,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             }
         }
 
-        private string BuildDumpName(GCMode gcmode, bool full)
+        private string BuildDumpName(GCMode gcMode, bool full)
         {
             string filename = Path.Combine(Path.GetDirectoryName(Executable), Path.GetFileNameWithoutExtension(Executable));
 
-            string gc = gcmode == GCMode.Server ? "svr" : "wks";
+            string gc = gcMode == GCMode.Server ? "svr" : "wks";
             string dumpType = full ? "" : "_mini";
-            filename = $"{filename}_{gc}{dumpType}.dmp";
+            filename = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? $"{filename}_{gc}{dumpType}.dmp"
+                : $"{filename}_{gc}{dumpType}_xplat.dmp";
             return filename;
         }
 

@@ -54,23 +54,40 @@
         </ItemGroup>
 
         <Message Text="Generating dumps for $(TargetPath)" />
+        
+        
+        <!-- used this for locating dump artifacts; may be useful in future
+        <ItemGroup>
+            <TestTargetsTouchFile Include=".touch" />
+        </ItemGroup>
+        
+        <Touch Files="@(TestTargetsTouchFile)" AlwaysCreate="true" ForceTouch="true" />
+        -->
 
-        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_wks_mini_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_mini_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=1;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
+        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_wks_mini_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_mini_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=1;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputWksMini" />
         </Exec>
 
-        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_wks_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
+        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_wks_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputWks" />
         </Exec>
 
-        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_svr_mini_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_mini_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=1;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
+        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_svr_mini_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_mini_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=1;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvrMini" />
         </Exec>
 
-        <Exec Command="dotnet '$(TargetPath)' || mv core $(TargetDumpFileName)_svr_xplat.dmp" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
+        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_svr_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvr" />
         </Exec>
 
+        <!-- used this for locating dump artifacts; may be useful in future
+        <Exec Command="find / \( \( -path /sys \) -o \( -path /proc \) \) -prune -o -cnewer '%(TestTargetsTouchFile.Identity)'" ContinueOnError="true">
+            <Output TaskParameter="ConsoleOutput" PropertyName="CreatedFiles" />
+        </Exec>
+        
+        <Error Text="$(CreatedFiles.Replace(';','&#10;'))" ContinueOnError="true" />
+        -->
+        
         <Error Condition="!Exists('$(TargetDumpFileName)_wks_mini_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_wks_mini_xplat.dmp'&#10;'$(TargetOutputWksMini.Replace(';','&#10;'))" />
         <Error Condition="!Exists('$(TargetDumpFileName)_wks_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_wks_xplat.dmp'&#10;'$(TargetOutputWks.Replace(';','&#10;'))" />
         <Error Condition="!Exists('$(TargetDumpFileName)_svr_mini_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_svr_mini_xplat.dmp'&#10;'$(TargetOutputSvrMini.Replace(';','&#10;'))" />

@@ -320,7 +320,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 Assert.NotSame(fooType, heap.GetObjectType(fooObjects[1]));
 #else
-                Assert.Equal(1, fooObjects.Length);
+                Assert.Single(fooObjects);
 #endif
 
                 ClrRoot appDomainsFoo = heap
@@ -353,7 +353,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.Equal(nestedExceptionFooMethodTable, methodTableEnumeration[1]);
 #else
                 ulong[] methodTableEnumeration = fooType.EnumerateMethodTables().ToArray();
-                Assert.Equal(1, methodTableEnumeration.Length);
+                Assert.Single(methodTableEnumeration);
                 Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
 #endif
             }
