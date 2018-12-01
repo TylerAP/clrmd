@@ -9,6 +9,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class ModuleTests
     {
+        static ModuleTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void TestGetTypeByName()
         {

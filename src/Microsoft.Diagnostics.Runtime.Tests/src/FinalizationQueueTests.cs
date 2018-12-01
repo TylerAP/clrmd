@@ -5,6 +5,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class FinalizationQueueTests
     {
+        static FinalizationQueueTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void TestAllFinalizableObjects()
         {

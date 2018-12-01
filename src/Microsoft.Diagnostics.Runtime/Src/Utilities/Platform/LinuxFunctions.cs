@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.Diagnostics.Runtime
@@ -21,29 +22,44 @@ namespace Microsoft.Diagnostics.Runtime
 
         public override IntPtr LoadLibrary(string filename)
         {
+            IntPtr h;
+            
             try
             {
-                return V2.dlopen(filename, RTLD_NOW);
+                h = V2.dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
             }
             catch (DllNotFoundException)
             {
-                return V1.dlopen(filename, RTLD_NOW);
+                h = V1.dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
             }
+
+            if (h != default)
+                return h;
+
+            string m;
+            try
+            {
+                var p = V2.dlerror();
+                m = p == default ? "Unknown error." : Marshal.PtrToStringAnsi(p);
+            }
+            catch (DllNotFoundException)
+            {
+                var p = V1.dlerror();
+                m = p == default ? "Unknown error." : Marshal.PtrToStringAnsi(p);
+            }
+            throw new InvalidOperationException($"Error loading library {filename}", new Exception(m));
+
         }
 
         public override bool FreeLibrary(IntPtr module)
         {
             try
             {
-                if (V2.dlclose(module) == 0)
-                    return true;
-                return false;
+                return V2.dlclose(module) == 0;
             }
             catch (DllNotFoundException)
             {
-                if (V1.dlclose(module) == 0)
-                    return true;
-                return false;
+                return V1.dlclose(module) == 0;
             }
         }
 
@@ -60,7 +76,10 @@ namespace Microsoft.Diagnostics.Runtime
         }
 
 
-        const int RTLD_NOW = 2;
+        //const int RTLD_LOCAL  = 0x000;
+        //const int RTLD_LAZY   = 0x001;
+        const int RTLD_NOW    = 0x002;
+        const int RTLD_GLOBAL = 0x100;
         
         internal static class V1
         {
@@ -73,6 +92,9 @@ namespace Microsoft.Diagnostics.Runtime
 
             [DllImport("dl")]
             internal static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+            [DllImport("dl")]
+            internal static extern IntPtr dlerror();
 
         }
         
@@ -87,6 +109,9 @@ namespace Microsoft.Diagnostics.Runtime
 
             [DllImport("libdl.so.2")]
             internal static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+            [DllImport("libdl.so.2")]
+            internal static extern IntPtr dlerror();
 
         }
     }

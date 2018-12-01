@@ -14,6 +14,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class PdbTests
     {
+        static PdbTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void PdbEqualityTest()
         {

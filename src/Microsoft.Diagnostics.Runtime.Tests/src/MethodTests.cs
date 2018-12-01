@@ -9,6 +9,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class MethodTests
     {
+        static MethodTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void MethodHandleMultiDomainTests()
         {

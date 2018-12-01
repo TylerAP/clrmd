@@ -9,6 +9,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class ExceptionTests
     {
+        static ExceptionTests() =>Helpers.InitHelpers();
+        
         [Fact]
         public void ExceptionPropertyTest()
         {

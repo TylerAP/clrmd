@@ -13,6 +13,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class GCRootTests
     {
+        static GCRootTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void EnumerateGCRefs()
         {

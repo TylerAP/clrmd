@@ -13,6 +13,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class TypeTests
     {
+        static TypeTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void IntegerObjectClrType()
         {

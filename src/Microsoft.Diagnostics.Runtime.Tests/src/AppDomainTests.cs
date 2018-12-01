@@ -12,6 +12,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class AppDomainTests
     {
+        static AppDomainTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void ModuleDomainTest()
         {

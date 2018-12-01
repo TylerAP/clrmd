@@ -14,6 +14,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class SymbolLocatorTests
     {
+        static SymbolLocatorTests() =>Helpers.InitHelpers();
+
         public static readonly string WellKnownDac = "mscordacwks_X86_X86_4.6.96.00.dll";
         public static readonly int WellKnownDacTimeStamp = 0x55b96946;
         public static readonly int WellKnownDacImageSize = 0x006a8000;

@@ -10,6 +10,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class GCHandleTests
     {
+        static GCHandleTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void EnsureEnumerationStability()
         {

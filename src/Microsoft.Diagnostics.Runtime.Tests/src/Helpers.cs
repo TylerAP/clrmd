@@ -7,12 +7,25 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using FluentAssertions;
 using JetBrains.Annotations;
+using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public static class Helpers
     {
+        static Helpers()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (appDomObj, unhandled) =>
+                {
+                    Action x = () => throw (Exception)unhandled.ExceptionObject;
+                    x.Should().NotThrow("Unhandled exception.");
+                };
+        }
+
+        public static void InitHelpers() {}
+        
         public static IEnumerable<ulong> GetObjectsOfType(this ClrHeap heap, string name)
         {
             return from obj in heap.EnumerateObjectAddresses()

@@ -13,6 +13,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class RuntimeTests
     {
+        static RuntimeTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void CreationSpecificDacNegativeTest()
         {

@@ -7,10 +7,9 @@ RUN dotnet tool install -g dotnet-symbol
 
 COPY . .
 
-
-
 RUN dotnet restore src/Microsoft.Diagnostics.Runtime.Tests
 
 RUN dotnet build --no-restore src/Microsoft.Diagnostics.Runtime.Tests
 
-RUN dotnet test --no-build -v n src/Microsoft.Diagnostics.Runtime.Tests
+RUN LD_LIBRARY_PATH='/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.6/' \
+dotnet test --no-build -v n src/Microsoft.Diagnostics.Runtime.Tests

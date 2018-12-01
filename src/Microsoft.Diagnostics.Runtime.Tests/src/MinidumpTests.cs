@@ -20,6 +20,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
     public class MinidumpTests
     {
+        static MinidumpTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void MinidumpCallstackTest()
         {

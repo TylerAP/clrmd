@@ -11,6 +11,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class HeapTests
     {
+        static HeapTests() =>Helpers.InitHelpers();
+
         [Fact]
         public void HeapEnumeration()
         {

@@ -25,6 +25,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
     public static class TestTargets
     {
+        static TestTargets() =>Helpers.InitHelpers();
+
         private static readonly Lazy<TestTarget> _gcroot = new Lazy<TestTarget>(() => new TestTarget("GCRoot.cs"));
         private static readonly Lazy<TestTarget> _nestedException = new Lazy<TestTarget>(() => new TestTarget("NestedException.cs"));
         private static readonly Lazy<TestTarget> _gcHandles = new Lazy<TestTarget>(() => new TestTarget("GCHandles.cs"));
@@ -94,13 +96,17 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         public DataTarget LoadMiniDump(GCMode gc = GCMode.Workstation)
         {
             string path = BuildDumpName(gc, false);
-            return DataTarget.LoadCrashDump(path);
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? DataTarget.LoadCrashDump(path)
+                : DataTarget.LoadCoreDump(path);
         }
 
         public DataTarget LoadFullDump(GCMode gc = GCMode.Workstation)
         {
             string path = BuildDumpName(gc, true);
-            return DataTarget.LoadCrashDump(path);
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? DataTarget.LoadCrashDump(path)
+                : DataTarget.LoadCoreDump(path);
         }
     }
 }

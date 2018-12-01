@@ -77,7 +77,7 @@ namespace Microsoft.Diagnostics.Runtime
 
             IntPtr dacLibrary = DataTarget.PlatformFunctions.LoadLibrary(dacDll);
             if (dacLibrary == IntPtr.Zero)
-                throw new ClrDiagnosticsException("Failed to load dac: " + dacLibrary);
+                throw new ClrDiagnosticsException($"Failed to load dac {dacDll}");
 
             OwningLibrary = new RefCountedFreeLibrary(dacLibrary);
             dataTarget.AddDacLibrary(this);
