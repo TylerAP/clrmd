@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FluentAssertions;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -19,18 +20,18 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
-                
+
                 ClrHeap heap = runtime.Heap;
                 Assert.NotNull(heap);
 
                 ClrModule typesExeModule = runtime.GetModule("types.dll");
                 Assert.NotNull(typesExeModule);
-                
+
                 ClrStaticField field = typesExeModule.GetTypeByName("Types").GetStaticFieldByName("s_i");
 
                 ClrAppDomain appDomain = runtime.AppDomains.SingleOrDefault();
                 Assert.NotNull(appDomain);
-                
+
                 ulong addr = (ulong)field.GetValue(appDomain);
                 ClrType type = heap.GetObjectType(addr);
                 Assert.NotNull(type);
@@ -116,7 +117,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
-                
+
                 ClrHeap heap = runtime.Heap;
 
                 ClrType[] types = (from obj in heap.EnumerateObjectAddresses()
@@ -124,8 +125,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                                    where t.Name == TypeName
                                    select t).ToArray();
 
+#if !NETCOREAPP2_1
                 Assert.Equal(2, types.Length);
                 Assert.NotSame(types[0], types[1]);
+#else
+                Assert.Single(types);
+#endif
 
                 ClrModule module = runtime.Modules.SingleOrDefault(m => Path.GetFileName(m.FileName).Equals("sharedlibrary.dll", StringComparison.OrdinalIgnoreCase));
                 ClrType typeFromModule = module.GetTypeByName(TypeName);
@@ -144,13 +149,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
-                
+
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.Exact;
 
                 IEnumerable<ClrRoot> fooRoots = from root in heap.EnumerateRoots()
-                               where root.Type.Name == "Foo"
-                               select root;
+                                                where root.Type.Name == "Foo"
+                                                select root;
 
                 ClrRoot staticRoot = fooRoots.SingleOrDefault(r => r.Kind == GCRootKind.StaticVar);
                 Assert.NotNull(staticRoot);
@@ -162,6 +167,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrThread thread = runtime.GetMainThread();
                 Assert.NotNull(thread);
+                
+                // NOTE: this is using a helper, it was previously using .Single, now .FirstOrDefault
                 ClrStackFrame main = thread.GetFrame("Main");
                 ClrStackFrame inner = thread.GetFrame("Inner");
 
@@ -299,14 +306,22 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ulong[] fooObjects = heap.EnumerateObjectAddresses()
                     .Where(obj => heap.GetObjectType(obj)?.Name == "Foo")
-                    .Select(obj => obj).ToArray();
+                    .Select(obj => obj)
+                    .ToArray();
 
+                fooObjects.Should().NotBeEmpty();
+
+                ClrType fooType = heap.GetObjectType(fooObjects[0]);
+
+#if !NETCOREAPP2_1
                 // There are exactly two Foo objects in the process, one in each app domain.
                 // They will have different method tables.
                 Assert.Equal(2, fooObjects.Length);
 
-                ClrType fooType = heap.GetObjectType(fooObjects[0]);
                 Assert.NotSame(fooType, heap.GetObjectType(fooObjects[1]));
+#else
+                Assert.Equal(1, fooObjects.Length);
+#endif
 
                 ClrRoot appDomainsFoo = heap
                     .EnumerateRoots(true)
@@ -328,6 +343,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 // AppDomain (in order of ClrAppDomain.Id).
                 Assert.Equal(appDomainsFooMethodTable, fooType.MethodTable);
 
+#if !NETCOREAPP2_1
                 // Ensure that we enumerate two type handles and that they match the method tables we have above.
                 ulong[] methodTableEnumeration = fooType.EnumerateMethodTables().ToArray();
                 Assert.Equal(2, methodTableEnumeration.Length);
@@ -335,6 +351,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 // These also need to be enumerated in ClrAppDomain.Id order
                 Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
                 Assert.Equal(nestedExceptionFooMethodTable, methodTableEnumeration[1]);
+#else
+                ulong[] methodTableEnumeration = fooType.EnumerateMethodTables().ToArray();
+                Assert.Equal(1, methodTableEnumeration.Length);
+                Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
+#endif
             }
         }
 
@@ -345,7 +366,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
-                
+
                 ClrHeap heap = runtime.Heap;
 
                 ClrAppDomain domain = runtime.AppDomains.SingleOrDefault();
@@ -354,7 +375,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrModule sharedLibraryModule = runtime.GetModule("sharedlibrary.dll");
                 Assert.NotNull(sharedLibraryModule);
                 ClrType fooType = sharedLibraryModule.GetTypeByName("Foo");
-                
+
                 ClrModule typesExeModule = runtime.GetModule("types.dll");
                 Assert.NotNull(typesExeModule);
                 ulong obj = (ulong)typesExeModule.GetTypeByName("Types").GetStaticFieldByName("s_foo").GetValue(runtime.AppDomains.Single());

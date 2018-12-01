@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FluentAssertions;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -70,18 +71,21 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
 
                 HashSet<string> expected = new HashSet<string>(
-                    new string[] {"mscorlib.dll", "sharedlibrary.dll", "nestedexception.dll", "appdomains.dll"},
+#if !NETCOREAPP2_1
+                    new[] {"mscorlib.dll", "sharedlibrary.dll", "nestedexception.dll", "appdomains.dll"},
+#else
+                    new[] {
+                        "System.Private.Corelib.dll", "System.Runtime.dll", "System.Runtime.Extensions.dll", "System.ThreadingThread.dll",
+                        "AppDomains.dll", "SharedLibrary.dll", "NestedException.dll"
+                    },
+#endif
                     StringComparer.OrdinalIgnoreCase);
-                HashSet<ClrModule> modules = new HashSet<ClrModule>();
 
-                foreach (ClrModule module in runtime.Modules)
-                {
-                    Assert.Contains(Path.GetFileName(module.FileName), expected);
-                    Assert.DoesNotContain(module, modules);
-                    modules.Add(module);
-                }
+                // TODO: where is SharedLibrary.dll and NestedException.dll?
+                expected.Should().Equal(runtime.Modules.Select(m => Path.GetFileName(m.FileName)));
             }
         }
     }

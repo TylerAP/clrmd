@@ -3,7 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using FluentAssertions;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -23,11 +26,23 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.NestedException.LoadMiniDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                ClrThread thread = runtime.GetMainThread();
+                Assert.NotNull(runtime);
 
-                string[] frames = IntPtr.Size == 8 ? new[] {"Inner", "Inner", "Middle", "Outer", "Main"} : new[] {"Inner", "Middle", "Outer", "Main"};
+                ClrThread thread = runtime.GetMainThread();
+                
+                Assert.NotNull(thread);
+
+                string[] expectedStackFrameMethodNames = IntPtr.Size == 8
+                    //? new[] {"Inner", "Inner", "Middle", "Outer", "Main"}
+                    ? new[] {null, "Main", null, "Inner", null, "Inner", "Middle", "Outer", "Main", null, null}
+                    // TODO: line below needs to be checked
+                    : new[] {"Inner", "Middle", "Outer", "Main"};
 
                 int i = 0;
+
+                var stackFrameMethodNames = thread.StackTrace.Select(f => f.Method?.Name);
+
+                stackFrameMethodNames.Should().Equal(expectedStackFrameMethodNames);
 
                 foreach (ClrStackFrame frame in thread.StackTrace)
                 {
@@ -43,7 +58,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         Assert.NotNull(frame.Method);
                         Assert.NotNull(frame.Method.Type);
                         Assert.NotNull(frame.Method.Type.Module);
-                        Assert.Equal(frames[i++], frame.Method.Name);
+#if !NETCOREAPP2_1
+                        Assert.Equal(frames[i],  frame.Method.Name);
+#else
+#endif
+                        ++i;
                     }
                 }
             }

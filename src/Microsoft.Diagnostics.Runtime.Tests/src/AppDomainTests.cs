@@ -20,43 +20,52 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
+#if !NETCOREAPP2_1
                 ClrAppDomain appDomainExe = runtime.GetDomainByName("AppDomains.dll");
                 Assert.NotNull(appDomainExe);
-                
+#else
+                ClrAppDomain appDomainExe = runtime.GetDomainByName("clrhost");
                 Assert.NotNull(appDomainExe);
-                
-                ClrAppDomain nestedDomain = runtime.GetDomainByName("Second AppDomain");
-                Assert.NotNull(nestedDomain);
+#endif
 
+#if !NETCOREAPP2_1
                 ClrModule mscorlib = runtime.GetModule("mscorlib.dll");
+#else
+                ClrModule mscorlib = runtime.GetModule("System.Private.Corelib.dll");
+#endif
                 Assert.NotNull(mscorlib);
-                
+
+#if !NETCOREAPP2_1
                 AssertModuleContainsDomains(mscorlib, runtime.SharedDomain, appDomainExe, nestedDomain);
+#endif
                 AssertModuleDoesntContainDomains(mscorlib, runtime.SystemDomain);
 
+#if !NETCOREAPP2_1
                 // SharedLibrary.dll is loaded into both domains but not as shared library like mscorlib.
                 // This means it will not be in the shared domain.
                 ClrModule sharedLibrary = runtime.GetModule("sharedlibrary.dll");
                 Assert.NotNull(sharedLibrary);
-                
+
                 AssertModuleContainsDomains(sharedLibrary, appDomainExe, nestedDomain);
                 AssertModuleDoesntContainDomains(sharedLibrary, runtime.SharedDomain, runtime.SystemDomain);
+#endif
 
                 ClrModule appDomainsExeModule = runtime.GetModule("AppDomains.dll");
                 Assert.NotNull(appDomainsExeModule);
-                
-                Assert.NotNull(appDomainsExeModule);
-                
+
                 AssertModuleContainsDomains(appDomainsExeModule, appDomainExe);
+
+#if !NETCOREAPP2_1
                 AssertModuleDoesntContainDomains(appDomainsExeModule, runtime.SystemDomain, runtime.SharedDomain, nestedDomain);
 
                 ClrModule nestedExeModule = runtime.GetModule("NestedException.dll");
                 Assert.NotNull(nestedExeModule);
-                
+
                 Assert.NotNull(nestedExeModule);
-                
+
                 AssertModuleContainsDomains(nestedExeModule, nestedDomain);
                 AssertModuleDoesntContainDomains(nestedExeModule, runtime.SystemDomain, runtime.SharedDomain, appDomainExe);
+#endif
             }
         }
 
@@ -96,6 +105,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 Assert.NotEqual(systemDomain.Address, sharedDomain.Address);
 
+#if !NETCOREAPP2_1
                 Assert.Equal(2, runtime.AppDomains.Count);
                 ClrAppDomain AppDomainsExe = runtime.AppDomains[0];
                 Assert.Equal("AppDomains.dll", AppDomainsExe.Name);
@@ -104,6 +114,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrAppDomain NestedExceptionExe = runtime.AppDomains[1];
                 Assert.Equal("Second AppDomain", NestedExceptionExe.Name);
                 Assert.Equal(2, NestedExceptionExe.Id);
+#else
+                Assert.Equal(1, runtime.AppDomains.Count);
+                ClrAppDomain appDomainsExe = runtime.AppDomains.SingleOrDefault();
+                Assert.NotNull(appDomainsExe);
+                Assert.Equal(1, appDomainsExe.Id);
+#endif
             }
         }
 
@@ -122,7 +138,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.Equal(1, sharedDomain.Modules.Count);
 
                 ClrModule mscorlib = sharedDomain.Modules.Single();
+#if !NETCOREAPP2_1
                 Assert.Equal("mscorlib.dll", Path.GetFileName(mscorlib.FileName), true);
+#else
+                Assert.Equal("System.Private.Corelib.dll", Path.GetFileName(mscorlib.FileName), true);
+#endif
             }
         }
 
@@ -134,22 +154,31 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
-                ClrAppDomain appDomainsExe = runtime.GetDomainByName("AppDomains.dll");
+#if !NETCOREAPP2_1
+                ClrAppDomain appDomainsExe = runtime.GetDomainByName("AppDomains.exe");
                 Assert.NotNull(appDomainsExe);
-                
+#else
+                ClrAppDomain appDomainsExe = runtime.AppDomains.SingleOrDefault();
                 Assert.NotNull(appDomainsExe);
-                
-                ClrAppDomain nestedExceptionExe = runtime.GetDomainByName("Second AppDomain");
-                Assert.NotNull(nestedExceptionExe);
+#endif
 
                 Dictionary<string, ClrModule> appDomainsModules = GetDomainModuleDictionary(appDomainsExe);
 
-                Assert.True(appDomainsModules.ContainsKey("appdomains.dll"));
+#if !NETCOREAPP2_1
+                Assert.True(appDomainsModules.ContainsKey("appdomains.exe"));
                 Assert.True(appDomainsModules.ContainsKey("mscorlib.dll"));
+#else
+                Assert.True(appDomainsModules.ContainsKey("appdomains.dll"));
+                Assert.True(appDomainsModules.ContainsKey("System.Private.Corelib.dll"));
+#endif
+
+#if !NETCOREAPP2_1
                 Assert.True(appDomainsModules.ContainsKey("sharedlibrary.dll"));
 
                 Assert.False(appDomainsModules.ContainsKey("nestedexception.dll"));
 
+                ClrAppDomain nestedExceptionExe = runtime.GetDomainByName("Second AppDomain");
+                Assert.NotNull(nestedExceptionExe);
                 Dictionary<string, ClrModule> nestedExceptionModules = GetDomainModuleDictionary(nestedExceptionExe);
 
                 Assert.True(nestedExceptionModules.ContainsKey("nestedexception.dll"));
@@ -161,6 +190,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 // Ensure that we use the same ClrModule in each AppDomain.
                 Assert.Equal(appDomainsModules["mscorlib.dll"], nestedExceptionModules["mscorlib.dll"]);
                 Assert.Equal(appDomainsModules["sharedlibrary.dll"], nestedExceptionModules["sharedlibrary.dll"]);
+
+#endif
             }
         }
 

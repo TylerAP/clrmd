@@ -12,6 +12,8 @@ class Types
 
     static object s_i = 42;
 
+    static Types() {} // beforefieldinit
+    
     public static void Main(string[] args)
     {
         GC.TryStartNoGCRegion(81908, true);

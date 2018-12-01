@@ -12,6 +12,7 @@
         <IsPackable>false</IsPackable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType> <!-- TODO: PdbTests for other DebugTypes -->
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
         <IntermediateOutputPath>obj/$(Platform)</IntermediateOutputPath>
@@ -108,7 +109,7 @@
 
     <Target Name="IncrementalCleanHack" AfterTargets="_CleanGetCurrentAndPriorFileWrites" BeforeTargets="IncrementalClean">
         <ItemGroup>
-            <_CleanPriorFileWrites Remove="$(TargetPath)"/>
+            <!-- don't clean up output -->
             <_CleanPriorFileWrites Remove="$(TargetDir)/*"/>
             <_CleanPriorFileWrites Remove="$(TargetDir)/**/*"/>
         </ItemGroup>

@@ -18,6 +18,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
+                // TODO: figure out why this isn't found, it should be
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
                 Assert.NotNull(module);
                 
@@ -25,7 +26,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrMethod method = type.GetMethod("Bar");
                 methodDescs = method.EnumerateMethodDescs().ToArray();
 
+#if !NETCOREAPP2_1
                 Assert.Equal(2, methodDescs.Length);
+#else
+                Assert.Single(methodDescs);
+#endif
             }
 
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
@@ -40,6 +45,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.Equal("Foo", method.Type.Name);
             }
 
+#if !NETCOREAPP2_1
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
@@ -51,6 +57,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.Equal("Bar", method.Name);
                 Assert.Equal("Foo", method.Type.Name);
             }
+#endif
         }
 
         [Fact]
@@ -89,9 +96,6 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
-                ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
-
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
                 ClrType type = module.GetTypeByName("Foo");
                 ClrMethod method = type.GetMethod("Bar");
@@ -111,6 +115,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
+                // TODO: figure out why this isn't found, it should be
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
                 Assert.NotNull(module);
                 ClrType type = module.GetTypeByName("Foo");

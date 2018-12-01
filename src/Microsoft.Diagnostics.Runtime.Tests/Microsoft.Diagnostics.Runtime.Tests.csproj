@@ -8,31 +8,35 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2018.2.1"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0"/>
-        <PackageReference Include="xunit" Version="2.4.0"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0"/>
+        <PackageReference Include="FluentAssertions" Version="5.5.3" />
+        <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+        <PackageReference Include="xunit" Version="2.4.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\TestTargets\*.cs">
+        <None Include="../TestTargets/*.cs">
       <Link>data\%(RecursiveDir)%(Filename)%(Extension)</Link>
         </None>
-        <None Include="..\TestTargets\Shared\*.cs">
-            <Link>TestTargets\Shared\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <None Include="../TestTargets/Shared/*.cs">
+            <Link>data\Shared\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </None>
+        <None Include="../TestTargets/TestTargets.csproj">
+            <Link>data\%(RecursiveDir)%(Filename)%(Extension)</Link>
         </None>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime.Native\Microsoft.Diagnostics.Runtime.Native.csproj"/>
-        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.csproj"/>
+        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime.Native\Microsoft.Diagnostics.Runtime.Native.csproj" />
+        <ProjectReference Include="..\Microsoft.Diagnostics.Runtime\Microsoft.Diagnostics.Runtime.csproj" />
     </ItemGroup>
 
     <Target Name="StartCreateTestTargets" BeforeTargets="Build">
-        <Message Text="Creating Test Targets..."/>
+        <Message Text="Creating Test Targets..." />
 
         <ItemGroup>
-            <TestTargetSharedLibrarySource Include="../TestTargets/Shared/SharedLibrary.cs"/>
+            <TestTargetSharedLibrarySource Include="../TestTargets/Shared/SharedLibrary.cs" />
         </ItemGroup>
         <PropertyGroup>
 
@@ -46,45 +50,24 @@
 
         </PropertyGroup>
 
-        <MakeDir Directories="$(TestTargetBin32Directory);$(TestTargetBin64Directory);$(TestTargetBinILDirectory)"/>
+        <MakeDir Directories="$(TestTargetBin32Directory);$(TestTargetBin64Directory);$(TestTargetBinILDirectory)" />
 
-        <MSBuild
-                Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
-                Targets="Restore;Build"
-                RunEachTargetSeparately="false"
-                Properties="Platform=AnyCPU;Configuration=Release;OutputType=library;SourceFile=Shared/SharedLibrary.cs"
-                BuildInParallel="false"
-                ContinueOnError="false"
-        />
+        <MSBuild Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" Targets="Restore;Build" RunEachTargetSeparately="false" Properties="Platform=AnyCPU;Configuration=Release;OutputType=library;SourceFile=Shared/SharedLibrary.cs" BuildInParallel="false" ContinueOnError="false" />
     </Target>
     <Target Name="CreateTestTargets" AfterTargets="StartCreateTestTargets" BeforeTargets="Build" DependsOnTargets="StartCreateTestTargets">
-        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)"/>
-        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)"/>
-        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)"/>
-        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)"/>
-        <Error Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x86."/>
-        <Error Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x64."/>
+        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)" />
+        <Copy Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin32Directory)" />
+        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).dll" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)" />
+        <Copy Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).pdb')" SourceFiles="$(TestTargetBinILDirectory)%(TestTargetSharedLibrarySource.Filename).pdb" UseHardlinksIfPossible="true" DestinationFolder="$(TestTargetBin64Directory)" />
+        <Error Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x86." />
+        <Error Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSharedLibrarySource.Filename).dll')" Text="TestTargets SharedLibrary is not in bin/x64." />
         <ItemGroup>
-            <TestTargetSources Include="../TestTargets/*.cs"/>
+            <TestTargetSources Include="../TestTargets/*.cs" />
         </ItemGroup>
 
-        <MSBuild Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll') AND '$(OS)'=='Windows_NT'"
-                 Targets="Restore;Build"
-                 RunEachTargetSeparately="false"
-                 Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
-                 Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)"
-                 BuildInParallel="false"
-                 ContinueOnError="false"
-        />
+        <MSBuild Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll') AND '$(OS)'=='Windows_NT'" Targets="Restore;Build" RunEachTargetSeparately="false" Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" BuildInParallel="false" ContinueOnError="false" />
 
-        <MSBuild Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename).dll')"
-                 Targets="Restore;Build"
-                 RunEachTargetSeparately="false"
-                 Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
-                 BuildInParallel="false"
-                 ContinueOnError="false"
-                 Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)"
-        />
+        <MSBuild Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename).dll')" Targets="Restore;Build" RunEachTargetSeparately="false" Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" BuildInParallel="false" ContinueOnError="false" Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
     </Target>
 
 </Project>

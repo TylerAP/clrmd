@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using FluentAssertions;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -254,6 +255,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
                 ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
@@ -278,26 +280,40 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             ulong target = heap.GetObjectsOfType("TargetType").Single();
             GCRootPath[] rootPaths = gcroot.EnumerateGCRoots(target, false, CancellationToken.None).ToArray();
 
-            Assert.True(rootPaths.Length >= 2);
+#if !NETCOREAPP2_1
+            rootPaths.Should().HaveCountGreaterOrEqualTo(2);
+#else
+            rootPaths.Should().HaveCountGreaterOrEqualTo(1);
+#endif
 
             foreach (GCRootPath rootPath in rootPaths)
                 AssertPathIsCorrect(heap, rootPath.Path.ToArray(), rootPath.Path.First().Address, target);
 
-            bool hasThread = false, hasStatic = false;
+#if !NETCOREAPP2_1
+            bool hasThread = false;
+#endif
+            bool hasStatic = false;
             foreach (GCRootPath rootPath in rootPaths)
             {
-                switch (rootPath.Root.Kind)
+                var gcRootKind = rootPath.Root.Kind;
+                switch (gcRootKind)
                 {
                     case GCRootKind.Pinning:
                         hasStatic = true;
                         break;
+#if !NETCOREAPP2_1
                     case GCRootKind.LocalVar:
                         hasThread = true;
                         break;
+#endif
+                    default:
+                        throw new NotImplementedException($"Unexpected GCRootKind {gcRootKind}");
                 }
             }
 
+#if !NETCOREAPP2_1
             Assert.True(hasThread);
+#endif
             Assert.True(hasStatic);
         }
 

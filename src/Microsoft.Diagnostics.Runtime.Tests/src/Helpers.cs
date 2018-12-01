@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
-using JetBrains.Annotations;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
 {
@@ -31,7 +30,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
         public static ClrModule GetMainModule(this ClrRuntime runtime)
         {
-            return runtime.Modules.First();
+            // TODO: how do you for-sure identify a main module? does this even make sense?
+            return runtime.Modules.Skip(1).First();
             //return runtime.Modules.Single(m => m.FileName.EndsWith(".exe"));
         }
 
@@ -57,7 +57,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [CanBeNull]
         public static ClrAppDomain GetDomainByName(this ClrRuntime runtime, string domainName)
         {
-            return runtime.AppDomains.Where(ad => ad.Name == domainName).SingleOrDefault();
+            return runtime.AppDomains.SingleOrDefault(ad => ad.Name == domainName);
         }
 
         [CanBeNull]
@@ -72,14 +72,14 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [CanBeNull]
         public static ClrThread GetMainThread(this ClrRuntime runtime)
         {
-            ClrThread thread = runtime.Threads.Where(t => !t.IsFinalizer).SingleOrDefault();
+            ClrThread thread = runtime.Threads.SingleOrDefault(t => !t.IsFinalizer);
             return thread;
         }
 
         [CanBeNull]
         public static ClrStackFrame GetFrame(this ClrThread thread, string functionName)
         {
-            return thread.StackTrace.SingleOrDefault(sf => sf.Method != null && sf.Method.Name == functionName);
+            return thread.StackTrace.FirstOrDefault(sf => sf.Method != null && sf.Method.Name == functionName);
         }
 
         public static string TestWorkingDirectory
