@@ -325,6 +325,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
                 ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();

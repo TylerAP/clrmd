@@ -127,11 +127,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                                    where t.Name == TypeName
                                    select t).ToArray();
 
-#if !NETCOREAPP2_1
                 Assert.Equal(2, types.Length);
+#if !NETCOREAPP2_1
                 Assert.NotSame(types[0], types[1]);
-#else
-                Assert.Single(types);
 #endif
 
                 ClrModule module = runtime.Modules.SingleOrDefault(m => Path.GetFileName(m.FileName).Equals("sharedlibrary.dll", StringComparison.OrdinalIgnoreCase));
@@ -315,14 +313,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrType fooType = heap.GetObjectType(fooObjects[0]);
 
-#if !NETCOREAPP2_1
-                // There are exactly two Foo objects in the process, one in each app domain.
+                // There are exactly two Foo objects in the process, one in each app domain (but not under .net core).
                 // They will have different method tables.
                 Assert.Equal(2, fooObjects.Length);
 
+#if !NETCOREAPP2_1
                 Assert.NotSame(fooType, heap.GetObjectType(fooObjects[1]));
-#else
-                Assert.Single(fooObjects);
 #endif
 
                 ClrRoot appDomainsFoo = heap
@@ -333,30 +329,37 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ulong nestedExceptionFoo = fooObjects.SingleOrDefault(obj => obj != appDomainsFoo.Object);
                 ClrType nestedExceptionFooType = heap.GetObjectType(nestedExceptionFoo);
 
+#if !NETCOREAPP2_1
                 Assert.NotSame(nestedExceptionFooType, appDomainsFoo.Type);
+#endif
 
                 ulong nestedExceptionFooMethodTable = dt.DataReader.ReadPointerUnsafe(nestedExceptionFoo);
                 ulong appDomainsFooMethodTable = dt.DataReader.ReadPointerUnsafe(appDomainsFoo.Object);
 
+#if !NETCOREAPP2_1
                 // These are in different domains and should have different type handles:
                 Assert.NotEqual(nestedExceptionFooMethodTable, appDomainsFooMethodTable);
+#endif
 
                 // The MethodTable returned by ClrType should always be the method table that lives in the "first"
                 // AppDomain (in order of ClrAppDomain.Id).
                 Assert.Equal(appDomainsFooMethodTable, fooType.MethodTable);
 
-#if !NETCOREAPP2_1
                 // Ensure that we enumerate two type handles and that they match the method tables we have above.
                 ulong[] methodTableEnumeration = fooType.EnumerateMethodTables().ToArray();
+#if !NETCOREAPP2_1
                 Assert.Equal(2, methodTableEnumeration.Length);
+#else
+                Assert.Single(methodTableEnumeration);
+#endif
 
+#if !NETCOREAPP2_1
                 // These also need to be enumerated in ClrAppDomain.Id order
                 Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
                 Assert.Equal(nestedExceptionFooMethodTable, methodTableEnumeration[1]);
 #else
-                ulong[] methodTableEnumeration = fooType.EnumerateMethodTables().ToArray();
-                Assert.Single(methodTableEnumeration);
                 Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
+                Assert.Equal(appDomainsFooMethodTable, nestedExceptionFooMethodTable);
 #endif
             }
         }

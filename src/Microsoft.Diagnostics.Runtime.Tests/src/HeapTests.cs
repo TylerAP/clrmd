@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using FluentAssertions;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -20,6 +21,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 ClrHeap heap = runtime.Heap;
 
                 bool encounteredFoo = false;
@@ -34,8 +36,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     count++;
                 }
 
-                Assert.True(encounteredFoo);
-                Assert.True(count > 0);
+                encounteredFoo.Should().BeTrue();
+                count.Should().BeGreaterThan(0);
             }
         }
 
@@ -46,6 +48,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 ClrHeap heap = runtime.Heap;
 
                 List<ClrObject> objects = new List<ClrObject>(heap.EnumerateObjects());
@@ -55,13 +58,14 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 {
                     ClrObject actual = objects[count++];
 
-                    Assert.Equal(obj, actual.Address);
+                    actual.Address.Should().Be(obj);
 
                     ClrType type = heap.GetObjectType(obj);
-                    Assert.Equal(type, actual.Type);
+                    
+                    actual.Type.Should().BeSameAs(type);
                 }
 
-                Assert.True(count > 0);
+                count.Should().BeGreaterThan(0);
             }
         }
 
@@ -72,6 +76,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 ClrHeap heap = runtime.Heap;
 
                 List<ClrObject> expectedList = new List<ClrObject>(heap.EnumerateObjects());
@@ -88,8 +93,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     ClrObject expected = expectedList[i];
                     ClrObject actual = actualList[i];
 
-                    Assert.True(expected == actual);
-                    Assert.Equal(expected, actual);
+                    actual.Should().Be(expected);
                 }
             }
         }
@@ -100,9 +104,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump(GCMode.Server))
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 ClrHeap heap = runtime.Heap;
 
-                Assert.True(runtime.ServerGC);
+                runtime.ServerGC.Should().BeTrue();
 
                 CheckSegments(heap);
             }
@@ -111,12 +116,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [Fact]
         public void WorkstationSegmentTests()
         {
-            using (DataTarget dt = TestTargets.Types.LoadFullDump(GCMode.Workstation))
+            using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
                 ClrHeap heap = runtime.Heap;
 
-                Assert.False(runtime.ServerGC);
+                runtime.ServerGC.Should().BeFalse();
 
                 CheckSegments(heap);
             }
@@ -126,23 +132,23 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             foreach (ClrSegment seg in heap.Segments)
             {
-                Assert.NotEqual(0ul, seg.Start);
-                Assert.NotEqual(0ul, seg.End);
-                Assert.True(seg.Start <= seg.End);
+                seg.Start.Should().NotBe(0ul);
+                seg.End.Should().NotBe(0ul);
+                seg.Start.Should().BeLessOrEqualTo(seg.End);
 
-                Assert.True(seg.Start < seg.CommittedEnd);
-                Assert.True(seg.CommittedEnd < seg.ReservedEnd);
+                seg.Start.Should().BeLessThan(seg.CommittedEnd);
+                seg.CommittedEnd.Should().BeLessThan(seg.ReservedEnd);
 
                 if (!seg.IsEphemeral)
                 {
-                    Assert.Equal(0ul, seg.Gen0Length);
-                    Assert.Equal(0ul, seg.Gen1Length);
+                    seg.Gen0Length.Should().Be(0ul);
+                    seg.Gen1Length.Should().Be(0ul);
                 }
-
+                
                 foreach (ulong obj in seg.EnumerateObjectAddresses())
                 {
                     ClrSegment curr = heap.GetSegmentByAddress(obj);
-                    Assert.Same(seg, curr);
+                    curr.Should().BeSameAs(seg);
                 }
             }
         }

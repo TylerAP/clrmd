@@ -3,11 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using FluentAssertions;
+using FluentAssertions.Collections;
+using FluentAssertions.Execution;
 using JetBrains.Annotations;
 using Xunit;
 
@@ -24,20 +29,22 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 };
         }
 
-        public static void InitHelpers() {}
-        
+        public static void InitHelpers()
+        {
+            // invoke static constructor once
+        }
+
         public static IEnumerable<ulong> GetObjectsOfType(this ClrHeap heap, string name)
         {
-            return from obj in heap.EnumerateObjectAddresses()
-                   let type = heap.GetObjectType(obj)
-                   where type?.Name == name
-                   select obj;
+            return heap.EnumerateObjectAddresses()
+                .Where(obj => heap.GetObjectType(obj)?.Name == name);
         }
 
         public static ClrObject GetStaticObjectValue(this ClrType mainType, string fieldName)
         {
             ClrStaticField field = mainType.GetStaticFieldByName(fieldName);
-            ulong obj = (ulong)field.GetValue(field.Type.Heap.Runtime.AppDomains.Single());
+            ClrAppDomain appDom = field.Type.Heap.Runtime.AppDomains.Single();
+            ulong obj = (ulong)field.GetValue(appDom);
             return new ClrObject(obj, mainType.Heap.GetObjectType(obj));
         }
 
@@ -45,6 +52,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             // TODO: how do you for-sure identify a main module? does this even make sense?
             return runtime.Modules.Skip(1).First();
+
             //return runtime.Modules.Single(m => m.FileName.EndsWith(".exe"));
         }
 
@@ -60,11 +68,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
         public static HashSet<T> Unique<T>(this IEnumerable<T> self)
         {
-            HashSet<T> set = new HashSet<T>();
-            foreach (T t in self)
-                set.Add(t);
-
-            return set;
+            return new HashSet<T>(self);
         }
 
         [CanBeNull]
@@ -76,10 +80,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [CanBeNull]
         public static ClrModule GetModule(this ClrRuntime runtime, string filename)
         {
-            return (from module in runtime.Modules
-                    let file = Path.GetFileName(module.FileName)
-                    where file.Equals(filename, StringComparison.OrdinalIgnoreCase)
-                    select module).SingleOrDefault();
+            return runtime.Modules
+                .SingleOrDefault
+                (
+                    module =>
+                        Path.GetFileName(module.FileName)
+                            .Equals(filename, StringComparison.OrdinalIgnoreCase)
+                );
         }
 
         [CanBeNull]
@@ -98,14 +105,20 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         public static string TestWorkingDirectory
         {
             get => _userSetWorkingPath ?? _workingPath.Value;
+            
+            /*
             set
             {
                 Debug.Assert(!_workingPath.IsValueCreated);
                 _userSetWorkingPath = value;
             }
+            */
         }
 
+#pragma warning disable 649
         private static string _userSetWorkingPath;
+#pragma warning restore 649
+
         private static readonly Lazy<string> _workingPath = new Lazy<string>(CreateWorkingPath, true);
 
         private static string CreateWorkingPath()
@@ -121,7 +134,84 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             return path;
         }
 
-        internal static readonly string TempRoot = "clrmd_removeme_";
+        internal const string TempRoot = "clrmd_removeme_";
+        
+        
+        
+        public static AndConstraint<TAssertions> SetEqual<TAssertions,T>(
+            this TAssertions sca,
+            IEnumerable<T> otherCollection, string because = "", params object[] becauseArgs)
+            where TAssertions : CollectionAssertions<IEnumerable<T>, TAssertions>
+        {
+            if (otherCollection == null)
+                throw new ArgumentNullException(nameof (otherCollection), "Cannot verify set equality against a <null> collection.");
+            switch (sca.Subject) {
+                case null:
+                {
+                    Execute.Assertion.BecauseOf(because, becauseArgs)
+                        .FailWith("Expected {context:collection} to set equal with {0}{reason}, but found {1}.", otherCollection, sca.Subject);
+                    break;
+                }
+                case IImmutableSet<T> subjImmSet:
+                {
+                    if (!subjImmSet.SetEquals(otherCollection))
+                    {
+                        Execute.Assertion.BecauseOf(because, becauseArgs)
+                            .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
+                    }
+
+                    break;
+                }
+                case ISet<T> subjSet:
+                {
+                    if (!subjSet.SetEquals(otherCollection))
+                    {
+                        Execute.Assertion.BecauseOf(because, becauseArgs)
+                            .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    switch (otherCollection) {
+                        case IImmutableSet<T> otherImmSet: {
+                            if (!otherImmSet.SetEquals(sca.Subject))
+                            {
+                                Execute.Assertion.BecauseOf(because, becauseArgs)
+                                    .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
+                            }
+
+                            return new AndConstraint<TAssertions>(sca);
+                        }
+                        case ISet<T> otherSet:
+                        {
+                            if (!otherSet.SetEquals(sca.Subject))
+                            {
+                                Execute.Assertion.BecauseOf(because, becauseArgs)
+                                    .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
+                            }
+
+                            break;
+                        }
+                        default:
+                        {
+                            if (!otherCollection.ToImmutableHashSet().SetEquals(sca.Subject))
+                            {
+                                Execute.Assertion.BecauseOf(because, becauseArgs)
+                                    .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
+                            }
+
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+            
+            return new AndConstraint<TAssertions>(sca);
+        }
     }
 
     public class GlobalCleanup

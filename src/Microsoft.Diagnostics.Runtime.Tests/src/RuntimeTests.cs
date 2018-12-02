@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -65,6 +66,27 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             }
         }
 
+
+        public static readonly IImmutableSet<string> ModuleEnumerationTestExpected
+            = ImmutableHashSet.Create
+            (
+                StringComparer.OrdinalIgnoreCase,
+#if !NETCOREAPP2_1
+                "mscorlib.dll",
+                "sharedlibrary.dll",
+                "nestedexception.dll",
+                "appdomains.dll"
+#else
+                "System.Private.CoreLib.dll",
+                "System.Runtime.dll",
+                "System.Runtime.Extensions.dll",
+                "System.Threading.Thread.dll",
+                "AppDomains.dll",
+                "SharedLibrary.dll",
+                "NestedException.dll"
+#endif
+            );
+        
         [Fact]
         public void ModuleEnumerationTest()
         {
@@ -75,19 +97,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
-                HashSet<string> expected = new HashSet<string>(
-#if !NETCOREAPP2_1
-                    new[] {"mscorlib.dll", "sharedlibrary.dll", "nestedexception.dll", "appdomains.dll"},
-#else
-                    new[] {
-                        "System.Private.Corelib.dll", "System.Runtime.dll", "System.Runtime.Extensions.dll", "System.ThreadingThread.dll",
-                        "AppDomains.dll", "SharedLibrary.dll", "NestedException.dll"
-                    },
-#endif
-                    StringComparer.OrdinalIgnoreCase);
+                // TODO: where is NestedException.dll?
+                IEnumerable<string> actual = runtime.Modules
+                    .Select(m => Path.GetFileName(m.FileName));
 
-                // TODO: where is SharedLibrary.dll and NestedException.dll?
-                expected.Should().Equal(runtime.Modules.Select(m => Path.GetFileName(m.FileName)));
+                actual.Should().SetEqual(ModuleEnumerationTestExpected);
+                //.BeEquivalentTo(expected);
             }
         }
     }

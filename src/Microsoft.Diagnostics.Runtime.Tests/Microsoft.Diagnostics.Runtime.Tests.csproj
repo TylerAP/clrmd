@@ -65,9 +65,41 @@
             <TestTargetSources Include="../TestTargets/*.cs" />
         </ItemGroup>
 
-        <MSBuild Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll') AND '$(OS)'=='Windows_NT'" Targets="Restore;Build" RunEachTargetSeparately="false" Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" BuildInParallel="false" ContinueOnError="false" />
+        <MSBuild
+            Condition="!Exists('$(TestTargetBin32Directory)%(TestTargetSources.Filename).dll') AND '$(OS)'=='Windows_NT'"
+            Targets="Restore;Build"
+            RunEachTargetSeparately="false"
+            Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+            BuildInParallel="false"
+            ContinueOnError="false"
+            Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
 
-        <MSBuild Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename).dll')" Targets="Restore;Build" RunEachTargetSeparately="false" Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" BuildInParallel="false" ContinueOnError="false" Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
+        <MSBuild
+            Condition="!Exists('$(TestTargetBin64Directory)%(TestTargetSources.Filename).dll')"
+            Targets="Restore;Build"
+            RunEachTargetSeparately="false"
+            Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+            BuildInParallel="false"
+            ContinueOnError="false"
+            Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
+    </Target>
+
+    <Target Name="CreateTestTargetDumps" AfterTargets="CreateTestTargets" BeforeTargets="Build" DependsOnTargets="CreateTestTargets">
+        <MSBuild
+            Condition="'$(OS)'=='Windows_NT'"
+            Targets="CreateTestTargetsDumps"
+            RunEachTargetSeparately="false"
+            Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+            BuildInParallel="false"
+            ContinueOnError="false"
+            Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
+        <MSBuild
+            Targets="CreateTestTargetsDumps"
+            RunEachTargetSeparately="false"
+            Projects="$(TestTargetBaseDirectory)/TestTargets.csproj"
+            BuildInParallel="false"
+            ContinueOnError="false"
+            Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
     </Target>
 
 </Project>

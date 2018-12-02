@@ -26,11 +26,11 @@ namespace Microsoft.Diagnostics.Runtime
             
             try
             {
-                h = V2.dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
+                h = V2.dlopen(filename, RTLD_NOW);
             }
             catch (DllNotFoundException)
             {
-                h = V1.dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
+                h = V1.dlopen(filename, RTLD_NOW);
             }
 
             if (h != default)
@@ -79,7 +79,7 @@ namespace Microsoft.Diagnostics.Runtime
         //const int RTLD_LOCAL  = 0x000;
         //const int RTLD_LAZY   = 0x001;
         const int RTLD_NOW    = 0x002;
-        const int RTLD_GLOBAL = 0x100;
+        //const int RTLD_GLOBAL = 0x100;
         
         internal static class V1
         {
