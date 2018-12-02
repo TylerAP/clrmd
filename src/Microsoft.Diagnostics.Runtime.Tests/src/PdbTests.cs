@@ -14,7 +14,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class PdbTests
     {
-        static PdbTests() =>Helpers.InitHelpers();
+        static PdbTests() =>
+            Helpers.InitHelpers();
 
         [Fact]
         public void PdbEqualityTest()
@@ -73,8 +74,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     Assert.Equal(TestTargets.NestedException.Source, reader.Sources.Single().Name, true);
 
                     IEnumerable<PdbFunction> functions = from frame in thread.StackTrace
-                                    where frame.Kind != ClrStackFrameType.Runtime
-                                    select reader.GetFunctionFromToken(frame.Method.MetadataToken);
+                                                         where frame.Kind != ClrStackFrameType.Runtime
+                                                         select reader.GetFunctionFromToken(frame.Method.MetadataToken);
 
                     foreach (PdbFunction function in functions)
                     {
@@ -102,7 +103,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                ClrModule module = runtime.Modules.Where(m => m.Name.Equals(TestTargets.NestedException.Executable, StringComparison.OrdinalIgnoreCase)).Single();
+                Assert.NotNull(runtime);
+                ClrModule module = runtime.Modules.Single(m => m.Name.Equals(TestTargets.NestedException.Executable, StringComparison.OrdinalIgnoreCase));
                 ClrType type = module.GetTypeByName("Program");
 
                 using (PdbReader pdb = new PdbReader(TestTargets.NestedException.Pdb))

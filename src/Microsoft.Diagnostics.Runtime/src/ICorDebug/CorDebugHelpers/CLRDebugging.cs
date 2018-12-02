@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime.ICorDebug
 {
@@ -26,7 +27,7 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
             object o;
             Guid ifaceId = typeof(ICLRDebugging).GetGuid();
             Guid clsid = clsidCLRDebugging;
-            NativeMethods.CLRCreateInstance(ref clsid, ref ifaceId, out o);
+            CLRCreateInstance(ref clsid, ref ifaceId, out o);
             _clrDebugging = (ICLRDebugging)o;
         }
 

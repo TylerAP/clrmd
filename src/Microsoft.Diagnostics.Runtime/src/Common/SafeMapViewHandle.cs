@@ -5,6 +5,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime
 {
@@ -18,10 +19,6 @@ namespace Microsoft.Diagnostics.Runtime
         {
             return UnmapViewOfFile(handle);
         }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool UnmapViewOfFile(IntPtr baseAddress);
 
         // This is technically equivalent to DangerousGetHandle, but it's safer for file
         // mappings. In file mappings, the "handle" is actually a base address that needs

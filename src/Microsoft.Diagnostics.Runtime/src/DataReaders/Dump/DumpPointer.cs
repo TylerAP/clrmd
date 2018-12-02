@@ -4,6 +4,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime.Utilities
 {
@@ -78,7 +79,7 @@ namespace Microsoft.Diagnostics.Runtime.Utilities
         // that we can't pinvoke to.
         private static void RawCopy(IntPtr src, IntPtr dest, uint numBytes)
         {
-            DumpReader.RtlMoveMemory(dest, src, new IntPtr(numBytes));
+            RtlMoveMemory(dest, src, new IntPtr(numBytes));
         }
 
         internal ulong GetUlong()

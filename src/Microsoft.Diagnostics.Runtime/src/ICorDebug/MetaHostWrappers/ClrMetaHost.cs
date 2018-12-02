@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Diagnostics.Runtime.Utilities;
 using static Microsoft.Diagnostics.Runtime.ICorDebug.PlatformHelper;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime.ICorDebug
 {
@@ -26,7 +28,7 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
             object o;
             Guid ifaceId = typeof(ICLRMetaHost).GetGuid();
             Guid clsid = clsidCLRMetaHost;
-            NativeMethods.CLRCreateInstance(ref clsid, ref ifaceId, out o);
+            CLRCreateInstance(ref clsid, ref ifaceId, out o);
             m_metaHost = (ICLRMetaHost)o;
         }
 
@@ -86,7 +88,7 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
             if (IsWindows)
             {
 
-                using (ProcessSafeHandle hProcess = WindowsNativeMethods.OpenProcess(
+                using (ProcessSafeHandle hProcess = OpenProcess(
                     /*
                     (int)(NativeMethods.ProcessAccessOptions.ProcessVMRead |
                                                                             NativeMethods.ProcessAccessOptions.ProcessQueryInformation |

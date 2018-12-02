@@ -5,6 +5,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime
 {
@@ -30,8 +31,5 @@ namespace Microsoft.Diagnostics.Runtime
             return CloseHandle(handle);
         }
 
-        [DllImport("kernel32.dll", SetLastError = true, PreserveSig = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool CloseHandle(IntPtr handle);
     }
 }

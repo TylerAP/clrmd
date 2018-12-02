@@ -3,11 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 #pragma warning disable 1591
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime
 {
     internal class ProcessSafeHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
@@ -22,9 +24,19 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
             SetHandle(handle);
         }
 
+        internal bool IsNull()
+        {
+            return handle == default;
+        }
+
         protected override bool ReleaseHandle()
         {
-            return WindowsNativeMethods.CloseHandle(handle);
+            return CloseHandle(handle);
+        }
+
+        internal static ProcessSafeHandle FromSafeHandle(SafeHandle h)
+        {
+            return new ProcessSafeHandle(h.DangerousGetHandle(), false);
         }
     }
 }

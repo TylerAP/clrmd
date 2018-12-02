@@ -71,6 +71,10 @@
     </Target>
 
     <Target Name="CreateTestTargetDumps" AfterTargets="CreateTestTargets" BeforeTargets="Build" DependsOnTargets="CreateTestTargets">
+        <ItemGroup>
+            <TestTargetSources Remove="../TestTargets/Attach.cs" />
+            <TestTargetSources Remove="..\TestTargets\Attach.cs" />
+        </ItemGroup>
         <MSBuild Condition="'$(OS)'=='Windows_NT'" Targets="CreateTestTargetsDumps" RunEachTargetSeparately="false" Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" BuildInParallel="false" ContinueOnError="false" Properties="Platform=x86;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
         <MSBuild Targets="CreateTestTargetsDumps" RunEachTargetSeparately="false" Projects="$(TestTargetBaseDirectory)/TestTargets.csproj" BuildInParallel="false" ContinueOnError="false" Properties="Platform=x64;Configuration=Release;OutputType=exe;SourceFile=%(TestTargetSources.Identity)" />
     </Target>

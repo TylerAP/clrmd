@@ -8,21 +8,23 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Diagnostics.Runtime.Utilities;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime
 {
-    internal unsafe class LiveDataReader : IDataReader
+    internal unsafe class WindowsLiveDataReader : IDataReader
     {
         private readonly int _originalPid;
         private readonly IntPtr _snapshotHandle;
         private readonly IntPtr _cloneHandle;
-        private IntPtr _process;
+        private ProcessSafeHandle _process;
         private readonly int _pid;
 
         private const int PROCESS_VM_READ = 0x10;
         private const int PROCESS_QUERY_INFORMATION = 0x0400;
 
-        public LiveDataReader(int pid, bool createSnapshot)
+        public WindowsLiveDataReader(int pid, bool createSnapshot)
         {
             if (createSnapshot)
             {
@@ -49,12 +51,12 @@ namespace Microsoft.Diagnostics.Runtime
 
             _process = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, false, _pid);
 
-            if (_process == IntPtr.Zero)
+            if (_process.IsNull())
                 throw new ClrDiagnosticsException(string.Format("Could not attach to process. Error {0}.", Marshal.GetLastWin32Error()));
 
             using (Process p = Process.GetCurrentProcess())
                 if (DataTarget.PlatformFunctions.TryGetWow64(p.Handle, out bool wow64) &&
-                    DataTarget.PlatformFunctions.TryGetWow64(_process, out bool targetWow64) &&
+                    DataTarget.PlatformFunctions.TryGetWow64(_process.DangerousGetHandle(), out bool targetWow64) &&
                     wow64 != targetWow64)
                 {
                     throw new ClrDiagnosticsException("Dac architecture mismatch!");
@@ -83,10 +85,9 @@ namespace Microsoft.Diagnostics.Runtime
                 }
             }
 
-            if (_process != IntPtr.Zero)
+            if (!_process.IsNull())
             {
-                CloseHandle(_process);
-                _process = IntPtr.Zero;
+                _process.Close();
             }
         }
 
@@ -111,12 +112,12 @@ namespace Microsoft.Diagnostics.Runtime
         {
             List<ModuleInfo> result = new List<ModuleInfo>();
 
-            EnumProcessModules(_process, null, 0, out uint needed);
+            EnumProcessModules(_process.DangerousGetHandle(), null, 0, out uint needed);
 
             IntPtr[] modules = new IntPtr[needed / 4];
             uint size = (uint)modules.Length * sizeof(uint);
 
-            if (!EnumProcessModules(_process, modules, size, out needed))
+            if (!EnumProcessModules(_process.DangerousGetHandle(), modules, size, out needed))
                 throw new ClrDiagnosticsException("Unable to get process modules.", ClrDiagnosticsException.HR.DataRequestError);
 
             for (int i = 0; i < modules.Length; i++)
@@ -129,7 +130,7 @@ namespace Microsoft.Diagnostics.Runtime
                 }
 
                 StringBuilder sb = new StringBuilder(1024);
-                GetModuleFileNameExA(_process, ptr, sb, sb.Capacity);
+                GetModuleFileNameExA(_process.DangerousGetHandle(), ptr, sb, sb.Capacity);
 
                 ulong baseAddr = (ulong)ptr.ToInt64();
                 GetFileProperties(baseAddr, out uint filesize, out uint timestamp);
@@ -152,7 +153,7 @@ namespace Microsoft.Diagnostics.Runtime
         public void GetVersionInfo(ulong addr, out VersionInfo version)
         {
             StringBuilder filename = new StringBuilder(1024);
-            GetModuleFileNameExA(_process, new IntPtr((long)addr), filename, filename.Capacity);
+            GetModuleFileNameExA(_process.DangerousGetHandle(), new IntPtr((long)addr), filename, filename.Capacity);
 
             if (DataTarget.PlatformFunctions.GetFileVersion(filename.ToString(), out int major, out int minor, out int revision, out int patch))
                 version = new VersionInfo(major, minor, revision, patch);
@@ -164,7 +165,7 @@ namespace Microsoft.Diagnostics.Runtime
         {
             try
             {
-                int res = ReadProcessMemory(_process, new IntPtr((long)address), buffer, bytesRequested, out bytesRead);
+                int res = ReadProcessMemory(_process.DangerousGetHandle(), new IntPtr((long)address), buffer, bytesRequested, out bytesRead);
                 return res != 0;
             }
             catch
@@ -178,8 +179,7 @@ namespace Microsoft.Diagnostics.Runtime
         {
             try
             {
-                int res = ReadProcessMemory(_process, new IntPtr((long)address), buffer, bytesRequested, out bytesRead);
-                return res != 0;
+                return ReadProcessMemory(_process.DangerousGetHandle(), new IntPtr((long)address), buffer, bytesRequested, out bytesRead);
             }
             catch
             {
@@ -233,7 +233,7 @@ namespace Microsoft.Diagnostics.Runtime
             MEMORY_BASIC_INFORMATION mem = new MEMORY_BASIC_INFORMATION();
             IntPtr ptr = new IntPtr((long)addr);
 
-            int res = VirtualQueryEx(_process, ptr, ref mem, new IntPtr(Marshal.SizeOf(mem)));
+            int res = VirtualQueryEx(_process.DangerousGetHandle(), ptr, ref mem, new IntPtr(Marshal.SizeOf(mem)));
             if (res == 0)
                 return false;
 
@@ -249,7 +249,7 @@ namespace Microsoft.Diagnostics.Runtime
                 if (thread.IsInvalid)
                     return false;
 
-                bool res = GetThreadContext(thread.DangerousGetHandle(), context);
+                bool res = WindowsNativeMethods.GetThreadContext(thread.DangerousGetHandle(), context);
                 return res;
             }
         }
@@ -263,7 +263,7 @@ namespace Microsoft.Diagnostics.Runtime
 
                 fixed (byte* b = context)
                 {
-                    bool res = GetThreadContext(thread.DangerousGetHandle(), new IntPtr(b));
+                    bool res = WindowsNativeMethods.GetThreadContext(thread.DangerousGetHandle(), new IntPtr(b));
                     return res;
                 }
             }
@@ -301,50 +301,5 @@ namespace Microsoft.Diagnostics.Runtime
             }
         }
 
-        [DllImport("kernel32.dll", EntryPoint = "OpenProcess")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hObject);
-
-        [DllImport("psapi.dll", SetLastError = true)]
-        public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr[] lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
-
-        [DllImport("psapi.dll", SetLastError = true)]
-        [PreserveSig]
-        public static extern uint GetModuleFileNameExA([In] IntPtr hProcess, [In] IntPtr hModule, [Out] StringBuilder lpFilename, [In][MarshalAs(UnmanagedType.U4)] int nSize);
-
-        [DllImport("kernel32.dll")]
-        private static extern int ReadProcessMemory(
-            IntPtr hProcess,
-            IntPtr lpBaseAddress,
-            [Out][MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3)]
-            byte[] lpBuffer,
-            int dwSize,
-            out int lpNumberOfBytesRead);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, IntPtr dwLength);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool GetThreadContext(IntPtr hThread, IntPtr lpContext);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern SafeWin32Handle OpenThread(ThreadAccess dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwThreadId);
-
-        [DllImport("kernel32")]
-        private static extern int PssCaptureSnapshot(IntPtr ProcessHandle, PSS_CAPTURE_FLAGS CaptureFlags, int ThreadContextFlags, out IntPtr SnapshotHandle);
-
-        [DllImport("kernel32")]
-        private static extern int PssFreeSnapshot(IntPtr ProcessHandle, IntPtr SnapshotHandle);
-
-        [DllImport("kernel32")]
-        private static extern int PssQuerySnapshot(IntPtr SnapshotHandle, PSS_QUERY_INFORMATION_CLASS InformationClass, out IntPtr Buffer, int BufferLength);
-
-        [DllImport("kernel32")]
-        private static extern int GetProcessId(IntPtr hObject);
-
-        [DllImport("kernel32.dll")]
-        internal static extern int ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, IntPtr lpBuffer, int dwSize, out int lpNumberOfBytesRead);
     }
 }

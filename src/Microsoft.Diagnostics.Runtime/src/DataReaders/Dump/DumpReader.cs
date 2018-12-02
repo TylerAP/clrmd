@@ -16,6 +16,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 // This provides a managed wrapper over the unmanaged dump-reading APIs in DbgHelp.dll.
 // 
@@ -455,7 +456,7 @@ namespace Microsoft.Diagnostics.Runtime.Utilities
                 Marshal.ThrowExceptionForHR(error, new IntPtr(-1));
             }
 
-            _view = MapViewOfFile(_fileMapping, WindowsFunctions.NativeMethods.FILE_MAP_READ, 0, 0, IntPtr.Zero);
+            _view = MapViewOfFile(_fileMapping, FILE_MAP_READ, 0, 0, IntPtr.Zero);
             if (_view.IsInvalid)
             {
                 int error = Marshal.GetHRForLastWin32Error();
@@ -489,28 +490,6 @@ namespace Microsoft.Diagnostics.Runtime.Utilities
             _mappedFileMemory = new LoadedFileMemoryLookups();
             IsMinidump = DumpNative.IsMiniDump(_view.BaseAddress);
         }
-
-        // Call CloseHandle to clean up.
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern SafeWin32Handle CreateFileMapping(
-            SafeFileHandle hFile,
-            IntPtr lpFileMappingAttributes,
-            PageProtection flProtect,
-            uint dwMaximumSizeHigh,
-            uint dwMaximumSizeLow,
-            string lpName);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern SafeMapViewHandle MapViewOfFile(
-            SafeWin32Handle hFileMappingObject,
-            uint
-                dwDesiredAccess,
-            uint dwFileOffsetHigh,
-            uint dwFileOffsetLow,
-            IntPtr dwNumberOfBytesToMap);
-
-        [DllImport("kernel32.dll")]
-        internal static extern void RtlMoveMemory(IntPtr destination, IntPtr source, IntPtr numberBytes);
 
         /// <summary>
         /// Dispose method.

@@ -23,14 +23,14 @@ namespace Microsoft.Diagnostics.Runtime
         public override IntPtr LoadLibrary(string filename)
         {
             IntPtr h;
-            
+
             try
             {
-                h = V2.dlopen(filename, RTLD_NOW);
+                h = DlV2.dlopen(filename, RTLD_NOW);
             }
             catch (DllNotFoundException)
             {
-                h = V1.dlopen(filename, RTLD_NOW);
+                h = DlV1.dlopen(filename, RTLD_NOW);
             }
 
             if (h != default)
@@ -39,27 +39,27 @@ namespace Microsoft.Diagnostics.Runtime
             string m;
             try
             {
-                var p = V2.dlerror();
+                var p = DlV2.dlerror();
                 m = p == default ? "Unknown error." : Marshal.PtrToStringAnsi(p);
             }
             catch (DllNotFoundException)
             {
-                var p = V1.dlerror();
+                var p = DlV1.dlerror();
                 m = p == default ? "Unknown error." : Marshal.PtrToStringAnsi(p);
             }
-            throw new InvalidOperationException($"Error loading library {filename}", new Exception(m));
 
+            throw new InvalidOperationException($"Error loading library {filename}", new Exception(m));
         }
 
         public override bool FreeLibrary(IntPtr module)
         {
             try
             {
-                return V2.dlclose(module) == 0;
+                return DlV2.dlclose(module) == 0;
             }
             catch (DllNotFoundException)
             {
-                return V1.dlclose(module) == 0;
+                return DlV1.dlclose(module) == 0;
             }
         }
 
@@ -67,23 +67,21 @@ namespace Microsoft.Diagnostics.Runtime
         {
             try
             {
-                return V2.dlsym(module, method);
+                return DlV2.dlsym(module, method);
             }
             catch (DllNotFoundException)
             {
-                return V1.dlsym(module, method);
+                return DlV1.dlsym(module, method);
             }
         }
 
-
         //const int RTLD_LOCAL  = 0x000;
         //const int RTLD_LAZY   = 0x001;
-        const int RTLD_NOW    = 0x002;
+        const int RTLD_NOW = 0x002;
         //const int RTLD_GLOBAL = 0x100;
-        
-        internal static class V1
-        {
 
+        internal static class DlV1
+        {
             [DllImport("dl")]
             internal static extern IntPtr dlopen(string filename, int flags);
 
@@ -95,12 +93,10 @@ namespace Microsoft.Diagnostics.Runtime
 
             [DllImport("dl")]
             internal static extern IntPtr dlerror();
-
         }
-        
-        internal static class V2
-        {
 
+        internal static class DlV2
+        {
             [DllImport("libdl.so.2")]
             internal static extern IntPtr dlopen(string filename, int flags);
 
@@ -112,7 +108,32 @@ namespace Microsoft.Diagnostics.Runtime
 
             [DllImport("libdl.so.2")]
             internal static extern IntPtr dlerror();
-
         }
+
+        // NOTE: IOV_MAX is 1024 or something
+        
+        [DllImport("c")]
+        internal static extern UIntPtr process_vm_readv(
+            int pid,
+            iovec local_iov,
+            ulong local_iov_count,
+            iovec remote_iov,
+            ulong remote_iovec_count,
+            ulong flags = 0);
+
+        [DllImport("c")]
+        internal static extern UIntPtr process_vm_writev(
+            int pid,
+            iovec local_iov,
+            ulong local_iov_count,
+            iovec remote_iov,
+            ulong remote_iovec_count,
+            ulong flags = 0);
+    }
+
+    public struct iovec
+    {
+        public IntPtr iov_base; /* Starting address */
+        public UIntPtr iov_len; /* Number of bytes to transfer */
     }
 }

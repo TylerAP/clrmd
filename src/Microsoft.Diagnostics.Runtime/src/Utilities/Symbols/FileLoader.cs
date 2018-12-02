@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.Diagnostics.Runtime.ICorDebug;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime.Utilities
 {
@@ -54,7 +55,7 @@ namespace Microsoft.Diagnostics.Runtime.Utilities
                 return -1;
             }
 
-            hModule = WindowsFunctions.NativeMethods.LoadLibrary(result);
+            hModule = LoadLibrary(result);
             return 0;
         }
     }

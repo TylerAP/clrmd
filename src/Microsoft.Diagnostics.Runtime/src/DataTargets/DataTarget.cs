@@ -130,7 +130,8 @@ namespace Microsoft.Diagnostics.Runtime
             IDataReader reader;
             if (attachFlag == AttachFlag.Passive)
             {
-                reader = new LiveDataReader(pid, false);
+                reader = new XplatLiveDataReader(pid); 
+                    //new WindowsLiveDataReader(pid, false);
             }
             else
             {
@@ -150,7 +151,7 @@ namespace Microsoft.Diagnostics.Runtime
         /// <returns>A DataTarget instance.</returns>
         public static DataTarget CreateSnapshotAndAttach(int pid)
         {
-            IDataReader reader = new LiveDataReader(pid, true);
+            IDataReader reader = new WindowsLiveDataReader(pid, true);
             DataTargetImpl dataTarget = new DataTargetImpl(reader, null);
             return dataTarget;
         }
