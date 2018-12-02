@@ -80,7 +80,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [CanBeNull]
         public static ClrModule GetModule(this ClrRuntime runtime, string filename)
         {
-            return runtime.Modules
+            return runtime.Modules.Take(50)
                 .SingleOrDefault
                 (
                     module =>

@@ -354,6 +354,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
                 ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
+                Assert.NotNull(runtime);
+                
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
@@ -371,7 +373,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             ClrHeap heap = gcroot.Heap;
             GetKnownSourceAndTarget(heap, out ulong source, out ulong target);
 
-            LinkedList<ClrObject>[] paths = gcroot.EnumerateAllPaths(source, target, false, CancellationToken.None).ToArray();
+            LinkedList<ClrObject>[] paths = gcroot.EnumerateAllPaths(source, target, false, CancellationToken.None)
+                .Take(4).ToArray();
 
             // There are exactly three paths to the object in the test target
             Assert.Equal(3, paths.Length);

@@ -42,7 +42,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 int i = 0;
 
-                var stackFrameMethodNames = thread.StackTrace.Select(f => f.Method?.Name);
+                var stackFrameMethodNames = thread.StackTrace.Select(f => f.Method?.Name).Take(50);
 
                 stackFrameMethodNames.Should().Equal(expectedStackFrameMethodNames);
 

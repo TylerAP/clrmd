@@ -63,9 +63,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         }
 
         [Fact]
-        public void MethodHandleSingleDomainTests()
+        public void MethodHandleSingleDomainTest1()
         {
-            ulong methodDesc;
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
@@ -73,19 +72,28 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
                 Assert.NotNull(module);
-                
+
                 ClrType type = module.GetTypeByName("Foo");
                 ClrMethod method = type.GetMethod("Bar");
-                methodDesc = method.EnumerateMethodDescs().Single();
+                ulong methodDesc = method.EnumerateMethodDescs().Single();
 
                 Assert.NotEqual(0ul, methodDesc);
             }
+        }
 
-            using (DataTarget dt = TestTargets.Types.LoadFullDump())
+        [Fact]
+        public void MethodHandleSingleDomainTest2()
+        {
+        using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
                 
+                ClrModule module = runtime.GetModule("sharedlibrary.dll");
+                Assert.NotNull(module);
+                ClrType type = module.GetTypeByName("Foo");
+                ClrMethod barMethod = type.GetMethod("Bar");
+                ulong methodDesc = barMethod.EnumerateMethodDescs().Single();
                 ClrMethod method = runtime.GetMethodByHandle(methodDesc);
 
                 Assert.NotNull(method);
@@ -93,14 +101,21 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.Equal("Foo", method.Type.Name);
             }
 
+        }
+
+        [Fact]
+        public void MethodHandleSingleDomainTest3()
+        {
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
                 Assert.NotNull(runtime);
 
                 ClrModule module = runtime.GetModule("sharedlibrary.dll");
+                Assert.NotNull(module);
                 ClrType type = module.GetTypeByName("Foo");
                 ClrMethod method = type.GetMethod("Bar");
+                ulong methodDesc = method.EnumerateMethodDescs().Single();
                 Assert.Equal(methodDesc, method.EnumerateMethodDescs().Single());
             }
         }
