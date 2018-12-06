@@ -6,7 +6,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 8)]
     [ComVisible(false)]

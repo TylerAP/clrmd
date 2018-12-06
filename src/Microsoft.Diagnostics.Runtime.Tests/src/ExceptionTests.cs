@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Linq;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -17,7 +18,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 
                 TestProperties(runtime);
             }
@@ -26,15 +27,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         internal static void TestProperties(ClrRuntime runtime)
         {
             ClrThread thread = runtime.Threads.Where(t => !t.IsFinalizer).SingleOrDefault();
-            Assert.NotNull(thread);
+            thread.ShouldNotBeNull();
             
             ClrException ex = thread.CurrentException;
-            Assert.NotNull(ex);
+            ex.ShouldNotBeNull();
 
             ExceptionTestData testData = TestTargets.NestedExceptionData;
-            Assert.Equal(testData.OuterExceptionMessage, ex.Message);
-            Assert.Equal(testData.OuterExceptionType, ex.Type.Name);
-            Assert.NotNull(ex.Inner);
+            ex.Message.ShouldBe(testData.OuterExceptionMessage);
+            ex.Type.Name.ShouldBe(testData.OuterExceptionType);
+            ex.Inner.ShouldNotBeNull();
         }
     }
 }

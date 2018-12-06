@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [ComImport]
     [Guid("2EE06488-C0D4-42B1-B26D-F3795EF606FB")]

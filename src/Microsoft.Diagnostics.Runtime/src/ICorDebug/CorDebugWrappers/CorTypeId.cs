@@ -5,7 +5,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct COR_TYPEID : IEquatable<COR_TYPEID>

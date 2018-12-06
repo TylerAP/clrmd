@@ -20,7 +20,7 @@ namespace Microsoft.Diagnostics.Runtime
         private readonly Lazy<ModuleInfo[]> _modules;
         private readonly List<DacLibrary> _dacLibraries = new List<DacLibrary>(2);
 
-        public DataTargetImpl(IDataReader dataReader, IDebugClient client)
+        public DataTargetImpl(IDataReader dataReader, object client)
         {
             _dataReader = dataReader ?? throw new ArgumentNullException(nameof(dataReader));
             DebuggerInterface = client;
@@ -63,7 +63,7 @@ namespace Microsoft.Diagnostics.Runtime
             return _dataReader.ReadMemory(address, buffer, bytesRequested, out bytesRead);
         }
 
-        public override IDebugClient DebuggerInterface { get; }
+        public override object DebuggerInterface { get; }
 
         public override IEnumerable<ModuleInfo> EnumerateModules()
         {

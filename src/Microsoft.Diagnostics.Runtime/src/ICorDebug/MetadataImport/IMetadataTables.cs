@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [Guid("D8F579AB-402D-4b8e-82D9-5D63B1065C68")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

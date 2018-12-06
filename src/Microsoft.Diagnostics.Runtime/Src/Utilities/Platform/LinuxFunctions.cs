@@ -111,29 +111,79 @@ namespace Microsoft.Diagnostics.Runtime
         }
 
         // NOTE: IOV_MAX is 1024 or something
-        
-        [DllImport("c")]
-        internal static extern UIntPtr process_vm_readv(
+        // libc.so.6
+
+        [DllImport("c", EntryPoint = "process_vm_readv", SetLastError=true)]
+        internal static extern IntPtr ProcessVmReadV(
             int pid,
-            iovec local_iov,
-            ulong local_iov_count,
-            iovec remote_iov,
-            ulong remote_iovec_count,
+            [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+            iovec[] localIoVec,
+            ulong localIovCount,
+            [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 4)]
+            iovec[] remoteIoVec,
+            ulong remoteIoVecCount,
             ulong flags = 0);
 
-        [DllImport("c")]
-        internal static extern UIntPtr process_vm_writev(
+        [DllImport("c", EntryPoint = "process_vm_writev", SetLastError=true)]
+        internal static extern IntPtr ProcessVmWriteV(
             int pid,
-            iovec local_iov,
-            ulong local_iov_count,
-            iovec remote_iov,
-            ulong remote_iovec_count,
+            [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)]
+            iovec localIoVec,
+            ulong localIoVecCount,
+            [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 4)]
+            iovec remoteIoVec,
+            ulong remoteIoVecCount,
             ulong flags = 0);
+
+        [DllImport("c", EntryPoint = "ptrace")]
+        internal static extern long PTrace(
+            PTraceRequest request,
+            int pid,
+            IntPtr address,
+            IntPtr data = default
+        );
     }
 
     public struct iovec
     {
         public IntPtr iov_base; /* Starting address */
         public UIntPtr iov_len; /* Number of bytes to transfer */
+    }
+
+    public enum PTraceRequest
+    {
+        TraceMe = 0,
+        PeekText,
+        PeekData,
+        PeekUser,
+        PokeText,
+        PokeData,
+        PokeUser,
+        Cont,
+        Kill,
+        SingleStep,
+        GetRegs = 12,
+        SetRegs,
+        GetFpReg,
+        SetFpRegs,
+        Attach = 16,
+        Detach,
+        GetFpXRegs,
+        SetFpXRegs,
+        Syscall = 24,
+        SetOptions = 0x4200,
+        GetEventMsg,
+        GetSigInfo,
+        SetSigInfo,
+        GetRegSet,
+        SetRegSet,
+        Seize,
+        Interrupt,
+        Listen,
+        PeekSigInfo,
+        GetSigMask,
+        SetSigMask,
+        SecCompGetFilter,
+        
     }
 }

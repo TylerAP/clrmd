@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Diagnostics.Runtime.DacInterface;
 using Microsoft.Diagnostics.Runtime.Desktop;
-using Microsoft.Diagnostics.Runtime.ICorDebug;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 
 namespace Microsoft.Diagnostics.Runtime
 {
@@ -19,7 +19,7 @@ namespace Microsoft.Diagnostics.Runtime
         protected ClrDataProcess _dacInterface;
         private MemoryReader _cache;
         protected IDataReader _dataReader;
-        protected DataTargetImpl _dataTarget;
+        protected DataTarget _dataTarget;
 
         protected ICorDebugProcess _corDebugProcess;
         internal ICorDebugProcess CorDebugProcess
@@ -33,7 +33,7 @@ namespace Microsoft.Diagnostics.Runtime
             }
         }
 
-        public RuntimeBase(ClrInfo info, DataTargetImpl dataTarget, DacLibrary lib)
+        public RuntimeBase(ClrInfo info, DataTarget dataTarget, DacLibrary lib)
         {
             Debug.Assert(lib != null);
             Debug.Assert(lib.InternalDacPrivateInterface != null);

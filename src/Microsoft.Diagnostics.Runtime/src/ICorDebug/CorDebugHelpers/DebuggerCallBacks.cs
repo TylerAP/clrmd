@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices.ComTypes;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     internal class DebuggerCallBacks : ICorDebugManagedCallback3, ICorDebugManagedCallback2, ICorDebugManagedCallback
     {

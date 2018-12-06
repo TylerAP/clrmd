@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 using Microsoft.Diagnostics.Runtime.Desktop;
 
 namespace Microsoft.Diagnostics.Runtime
@@ -118,7 +119,8 @@ namespace Microsoft.Diagnostics.Runtime
             if (_dataTarget.IsMinidump)
                 _dataTarget.SymbolLocator.PrefetchBinary(ModuleInfo.FileName, (int)ModuleInfo.TimeStamp, (int)ModuleInfo.FileSize);
 
-            DacLibrary lib = new DacLibrary(_dataTarget, dac);
+            DacLibrary lib;
+            lib = new DacLibrary(_dataTarget, dac);
 
             DesktopVersion ver;
             if (Flavor == ClrFlavor.Core)
@@ -152,7 +154,7 @@ namespace Microsoft.Diagnostics.Runtime
             return Version.ToString();
         }
 
-        internal ClrInfo(DataTargetImpl dt, ClrFlavor flavor, ModuleInfo module, DacInfo dacInfo, string dacLocation)
+        internal ClrInfo(DataTarget dt, ClrFlavor flavor, ModuleInfo module, DacInfo dacInfo, string dacLocation)
         {
             Debug.Assert(dacInfo != null);
 
@@ -168,7 +170,7 @@ namespace Microsoft.Diagnostics.Runtime
         {
         }
 
-        private readonly DataTargetImpl _dataTarget;
+        private readonly DataTarget _dataTarget;
 
         /// <summary>
         /// IComparable.  Sorts the object by version.

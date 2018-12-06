@@ -4,7 +4,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct _ULARGE_INTEGER

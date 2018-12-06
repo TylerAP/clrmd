@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Diagnostics.Runtime.Utilities;
 using Microsoft.Diagnostics.Runtime.Utilities.Pdb;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -33,8 +34,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     Assert.True(allPdbs[i].Equals(allPdbs[i]));
                     for (int j = i + 1; j < allPdbs.Length; j++)
                     {
-                        Assert.False(allPdbs[i].Equals(allPdbs[j]));
-                        Assert.False(allPdbs[j].Equals(allPdbs[i]));
+                        allPdbs[i].Equals(allPdbs[j]).ShouldBeFalse();
+                        allPdbs[j].Equals(allPdbs[i]).ShouldBeFalse();
                     }
                 }
             }
@@ -48,15 +49,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             // Ensure we get the same answer a different way.
             using (PdbReader pdbReader = new PdbReader(TestTargets.NestedException.Pdb))
             {
-                Assert.Equal(pdbAge, pdbReader.Age);
-                Assert.Equal(pdbSignature, pdbReader.Signature);
+                pdbReader.Age.ShouldBe(pdbAge);
+                pdbReader.Signature.ShouldBe(pdbSignature);
             }
 
             // Ensure the PEFile has the same signature/age.
             using (PEFile peFile = new PEFile(TestTargets.NestedException.Executable))
             {
-                Assert.Equal(peFile.PdbInfo.Guid, pdbSignature);
-                Assert.Equal(peFile.PdbInfo.Revision, pdbAge);
+                pdbSignature.ShouldBe(peFile.PdbInfo.Guid);
+                pdbAge.ShouldBe(peFile.PdbInfo.Revision);
             }
         }
 
@@ -71,7 +72,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 HashSet<int> sourceLines = new HashSet<int>();
                 using (PdbReader reader = new PdbReader(TestTargets.NestedException.Pdb))
                 {
-                    Assert.Equal(TestTargets.NestedException.Source, reader.Sources.Single().Name, true);
+                    reader.Sources.Single().Name.ShouldBe(TestTargets.NestedException.Source, StringCompareShould.IgnoreCase);
 
                     IEnumerable<PdbFunction> functions = from frame in thread.StackTrace
                                                          where frame.Kind != ClrStackFrameType.Runtime
@@ -103,7 +104,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrModule module = runtime.Modules.Single(m => m.Name.Equals(TestTargets.NestedException.Executable, StringComparison.OrdinalIgnoreCase));
                 ClrType type = module.GetTypeByName("Program");
 
@@ -115,7 +116,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         if (method.Type != type || method.IsConstructor || method.IsClassConstructor)
                             continue;
 
-                        Assert.NotNull(pdb.GetFunctionFromToken(method.MetadataToken));
+                        pdb.GetFunctionFromToken(method.MetadataToken).ShouldNotBeNull();
                     }
                 }
             }

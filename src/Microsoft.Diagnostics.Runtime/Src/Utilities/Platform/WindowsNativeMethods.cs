@@ -8,28 +8,26 @@ namespace Microsoft.Diagnostics.Runtime.Utilities {
     {
         internal const int MAX_PATH = 260;
 
-        private const string Kernel32LibraryName = "kernel32";
-        //private const string Ole32LibraryName = "ole32";
-        //private const string ShlwapiLibraryName = "shlwapi";
-        private const string ShimLibraryName = "mscoree";
-        private const string AdvApi32LibraryName = "advapi32";
-        private const string VersionLibraryName = "version";
-        private const string PsapiLibraryName = "psapi";
-
         internal const uint FILE_MAP_READ = 4;
 
         internal const int VS_FIXEDFILEINFO_size = 0x34;
 
         internal const short IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR = 14;
 
+        private const string Kernel32LibraryName = "kernel32";
+        //private const string Ole32LibraryName = "ole32";
+        //private const string ShlwapiLibraryName = "shlwapi";
+        private const string AdvApi32LibraryName = "advapi32";
+        private const string VersionLibraryName = "version";
+        private const string PsapiLibraryName = "psapi";
+        private const string DbgEngLibraryName = "dbgeng";
+
         [DllImport(Kernel32LibraryName)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool FreeLibrary(IntPtr hModule);
 
-        internal static IntPtr LoadLibrary(string lpFileName)
-        {
-            return LoadLibraryEx(lpFileName, 0, LoadLibraryFlags.NoFlags);
-        }
+        internal static IntPtr LoadLibrary(string lpFileName) =>
+            LoadLibraryEx(lpFileName, 0, LoadLibraryFlags.NoFlags);
 
         [DllImport(Kernel32LibraryName, SetLastError = true)]
         internal static extern IntPtr LoadLibraryEx(string fileName, int hFile, LoadLibraryFlags dwFlags);
@@ -117,29 +115,11 @@ namespace Microsoft.Diagnostics.Runtime.Utilities {
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool UnmapViewOfFile(IntPtr baseAddress);
 
-        [DllImport(ShimLibraryName, CharSet = CharSet.Unicode, PreserveSig = false)]
-        internal static extern ICorDebug.ICorDebug CreateDebuggingInterfaceFromVersion(int iDebuggerVersion, string szDebuggeeVersion);
 
-        [DllImport(ShimLibraryName, CharSet = CharSet.Unicode, PreserveSig = false)]
-        internal static extern void GetVersionFromProcess(
-            ProcessSafeHandle hProcess,
-            StringBuilder versionString,
-            int bufferSize,
-            out int dwLength);
-
-        [DllImport(ShimLibraryName, CharSet = CharSet.Unicode, PreserveSig = false)]
-        internal static extern void GetRequestedRuntimeVersion(
-            string pExe,
-            StringBuilder pVersion,
-            int cchBuffer,
-            out int dwLength);
-
-        [DllImport(ShimLibraryName, CharSet = CharSet.Unicode, PreserveSig = false)]
-        internal static extern void CLRCreateInstance(
-            ref Guid clsid,
-            ref Guid riid,
-            [MarshalAs(UnmanagedType.Interface)] out object metahostInterface);
-
+        [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
+        [DllImport(DbgEngLibraryName)]
+        public static extern uint DebugCreate(ref Guid InterfaceId, [MarshalAs(UnmanagedType.IUnknown)] out object Interface);
+        
         [DllImport(Kernel32LibraryName, PreserveSig = true)]
         internal static extern ProcessSafeHandle OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 

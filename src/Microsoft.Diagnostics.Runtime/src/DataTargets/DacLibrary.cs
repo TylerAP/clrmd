@@ -3,8 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 using Microsoft.Diagnostics.Runtime.DacInterface;
+using static Microsoft.Diagnostics.Runtime.Utilities.DebugShimNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime
 {
@@ -65,7 +68,7 @@ namespace Microsoft.Diagnostics.Runtime
             return pUnk;
         }
 
-        internal DacLibrary(DataTargetImpl dataTarget, IntPtr pUnk)
+        internal DacLibrary(DataTarget dataTarget, IntPtr pUnk)
         {
             InternalDacPrivateInterface = new ClrDataProcess(this, pUnk);
         }
@@ -75,33 +78,41 @@ namespace Microsoft.Diagnostics.Runtime
             if (dataTarget.ClrVersions.Count == 0)
                 throw new ClrDiagnosticsException("Process is not a CLR process!");
 
-            IntPtr dacLibrary = DataTarget.PlatformFunctions.LoadLibrary(dacDll);
-            if (dacLibrary == IntPtr.Zero)
+            var n = DataTarget.PlatformFunctions;
+
+            IntPtr addrDacLibrary = n.LoadLibrary(dacDll);
+            if (addrDacLibrary == IntPtr.Zero)
                 throw new ClrDiagnosticsException($"Failed to load dac {dacDll}");
 
-            OwningLibrary = new RefCountedFreeLibrary(dacLibrary);
+            OwningLibrary = new RefCountedFreeLibrary(addrDacLibrary);
             dataTarget.AddDacLibrary(this);
 
-            IntPtr initAddr = DataTarget.PlatformFunctions.GetProcAddress(dacLibrary, "DAC_PAL_InitializeDLL");
-            if (initAddr == IntPtr.Zero)
-                initAddr = DataTarget.PlatformFunctions.GetProcAddress(dacLibrary, "PAL_InitializeDLL");
+            IntPtr addrInitializeDll = n.GetProcAddress(addrDacLibrary, "DAC_PAL_InitializeDLL");
+            if (addrInitializeDll == IntPtr.Zero)
+                addrInitializeDll = n.GetProcAddress(addrDacLibrary, "PAL_InitializeDLL");
 
-            if (initAddr != IntPtr.Zero)
+            if (addrInitializeDll != IntPtr.Zero)
             {
-                IntPtr dllMain = DataTarget.PlatformFunctions.GetProcAddress(dacLibrary, "DllMain");
+                IntPtr dllMain = n.GetProcAddress(addrDacLibrary, "DllMain");
                 DllMain main = (DllMain)Marshal.GetDelegateForFunctionPointer(dllMain, typeof(DllMain));
-                int result = main(dacLibrary, 1, IntPtr.Zero);
+                bool dllMainResult = main(addrDacLibrary, 1, IntPtr.Zero);
+                if (!dllMainResult)
+                    Console.Error.WriteLine("Warning: DAC DllMain returned false");
             }
 
-            IntPtr addr = DataTarget.PlatformFunctions.GetProcAddress(dacLibrary, "CLRDataCreateInstance");
+            IntPtr iUnk;
+
+            IntPtr addrClrDataCreateInstance = n.GetProcAddress(addrDacLibrary, "CLRDataCreateInstance");
             DacDataTarget = new DacDataTargetWrapper(dataTarget);
 
-            CreateDacInstance func = (CreateDacInstance)Marshal.GetDelegateForFunctionPointer(addr, typeof(CreateDacInstance));
-            Guid guid = new Guid("5c552ab6-fc09-4cb3-8e36-22fa03c798b7");
-            int res = func(ref guid, DacDataTarget.IDacDataTarget, out IntPtr iUnk);
+            CreateDacInstance funcClrDataCreateInstance = (CreateDacInstance)
+                Marshal.GetDelegateForFunctionPointer(addrClrDataCreateInstance, typeof(CreateDacInstance));
 
-            if (res != 0)
-                throw new ClrDiagnosticsException("Failure loading DAC: CreateDacInstance failed 0x" + res.ToString("x"), ClrDiagnosticsException.HR.DacError);
+            Guid guid = new Guid("5c552ab6-fc09-4cb3-8e36-22fa03c798b7");
+            int hr = funcClrDataCreateInstance(ref guid, DacDataTarget.IDacDataTarget, out iUnk);
+
+            if (hr != 0)
+                throw new ClrDiagnosticsException("Failure loading DAC: CreateDacInstance failed 0x" + hr.ToString("x"), ClrDiagnosticsException.HR.DacError);
 
             InternalDacPrivateInterface = new ClrDataProcess(this, iUnk);
         }
@@ -130,7 +141,7 @@ namespace Microsoft.Diagnostics.Runtime
         }
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int DllMain(IntPtr instance, int reason, IntPtr reserved);
+        private delegate bool DllMain(IntPtr instance, int reason, IntPtr reserved);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int PAL_Initialize();

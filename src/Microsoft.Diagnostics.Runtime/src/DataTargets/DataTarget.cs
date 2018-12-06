@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 using Microsoft.Diagnostics.Runtime.Interop;
 using Microsoft.Diagnostics.Runtime.Utilities;
 
@@ -83,7 +84,7 @@ namespace Microsoft.Diagnostics.Runtime
             return CreateFromReader(reader, null);
         }
 
-        private static DataTarget CreateFromReader(IDataReader reader, IDebugClient client)
+        private static DataTarget CreateFromReader(IDataReader reader, object client)
         {
 #if _TRACING
             reader = new TraceDataReader(reader);
@@ -96,14 +97,25 @@ namespace Microsoft.Diagnostics.Runtime
         /// a dbgeng based debugger to a process you may pass the IDebugClient RCW object to this function
         /// to create the DataTarget.
         /// </summary>
-        /// <param name="client">The dbgeng IDebugClient object.  We will query interface on this for IDebugClient.</param>
+        /// <param name="clientObj">The dbgeng IDebugClient object.  We will query interface on this for IDebugClient.</param>
         /// <returns>A DataTarget instance.</returns>
-        public static DataTarget CreateFromDebuggerInterface(IDebugClient client)
+        public static DataTarget CreateFromDebuggerInterface(object clientObj)
         {
-            DbgEngDataReader reader = new DbgEngDataReader(client);
-            DataTargetImpl dataTarget = new DataTargetImpl(reader, reader.DebuggerInterface);
+            if (clientObj is IDebugClient client)
+            {
 
-            return dataTarget;
+                DbgEngDataReader reader = new DbgEngDataReader(client);
+                DataTargetImpl dataTarget = new DataTargetImpl(reader, reader.DebuggerInterface);
+
+                return dataTarget;
+            }
+
+            if (clientObj is ICorDebug corDebug)
+            {
+                throw new NotImplementedException();
+            }
+            
+            throw new NotSupportedException();
         }
 
         /// <summary>
@@ -126,22 +138,24 @@ namespace Microsoft.Diagnostics.Runtime
         /// <returns>A DataTarget instance.</returns>
         public static DataTarget AttachToProcess(int pid, uint msecTimeout, AttachFlag attachFlag)
         {
-            IDebugClient client = null;
-            IDataReader reader;
-            if (attachFlag == AttachFlag.Passive)
-            {
-                reader = new XplatLiveDataReader(pid); 
-                    //new WindowsLiveDataReader(pid, false);
-            }
-            else
-            {
-                DbgEngDataReader dbgeng = new DbgEngDataReader(pid, attachFlag, msecTimeout);
-                reader = dbgeng;
-                client = dbgeng.DebuggerInterface;
-            }
+            object client = null;
+            
+            //IDataReader reader;
+
+            var dt = new XPlatLiveDataTarget(pid, msecTimeout, attachFlag);
+
+            //reader = dt;
+            
+            return dt;
+            
+            /*
+            DbgEngDataReader dbgeng = new DbgEngDataReader(pid, attachFlag, msecTimeout);
+            IDataReader reader = dbgeng;
+            client = dbgeng.DebuggerInterface;
 
             DataTargetImpl dataTarget = new DataTargetImpl(reader, client);
             return dataTarget;
+            */
         }
 
         /// <summary>
@@ -237,7 +251,7 @@ namespace Microsoft.Diagnostics.Runtime
         /// Returns the IDebugClient interface associated with this datatarget.  (Will return null if the
         /// user attached passively.)
         /// </summary>
-        public abstract IDebugClient DebuggerInterface { get; }
+        public abstract object DebuggerInterface { get; }
 
         /// <summary>
         /// Enumerates information about the loaded modules in the process (both managed and unmanaged).

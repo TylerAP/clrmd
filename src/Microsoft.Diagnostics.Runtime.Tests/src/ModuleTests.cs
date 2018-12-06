@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Linq;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -17,18 +18,18 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 
                 ClrHeap heap = runtime.Heap;
-                Assert.NotNull(heap);
+                heap.ShouldNotBeNull();
 
                 ClrModule shared = runtime.GetModule("sharedlibrary.dll");
-                Assert.NotNull(shared);
-                Assert.NotNull(shared.GetTypeByName("Foo"));
+                shared.ShouldNotBeNull();
+                shared.GetTypeByName("Foo").ShouldNotBeNull();
                 Assert.Null(shared.GetTypeByName("Types"));
 
                 ClrModule types = runtime.GetModule("types.dll");
-                Assert.NotNull(types.GetTypeByName("Types"));
+                types.GetTypeByName("Types").ShouldNotBeNull();
                 Assert.Null(types.GetTypeByName("Foo"));
             }
         }

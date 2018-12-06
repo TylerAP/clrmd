@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -34,15 +34,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         private void ValidateRefs(ClrObject[] refs)
         {
             // Should contain one SingleRef and one TripleRef object.
-            Assert.Equal(2, refs.Length);
+            refs.Length.ShouldBe(2);
 
-            Assert.Equal(1, refs.Count(r => r.Type.Name == "SingleRef"));
-            Assert.Equal(1, refs.Count(r => r.Type.Name == "TripleRef"));
+            refs.Count(r => r.Type.Name == "SingleRef").ShouldBe(1);
+            refs.Count(r => r.Type.Name == "TripleRef").ShouldBe(1);
 
             foreach (ClrObject obj in refs)
             {
-                Assert.NotEqual(0ul, obj.Address);
-                Assert.Equal(obj.Type.Heap.GetObjectType(obj.Address), obj.Type);
+                obj.Address.ShouldNotBe(0ul);
+                obj.Type.ShouldBe(obj.Type.Heap.GetObjectType(obj.Address));
             }
         }
 
@@ -60,11 +60,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrObject obj = mainType.GetStaticObjectValue("TheRoot");
                 obj = obj.GetObjectField("Item1");
 
-                Assert.Equal("System.Object[]", obj.Type.Name);
+                obj.Type.Name.ShouldBe("System.Object[]");
 
                 ClrObject[] refs = obj.EnumerateObjectReferences(false).ToArray();
                 Assert.Single(refs);
-                Assert.Equal("DoubleRef", refs[0].Type.Name);
+                refs[0].Type.Name.ShouldBe("DoubleRef");
             }
         }
 
@@ -79,16 +79,16 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ObjectSet hash = new ObjectSet(heap);
                 foreach (ulong obj in heap.EnumerateObjectAddresses())
                 {
-                    Assert.False(hash.Contains(obj));
+                    hash.Contains(obj).ShouldBeFalse();
                     hash.Add(obj);
-                    Assert.True(hash.Contains(obj));
+                    hash.Contains(obj).ShouldBeTrue();
                 }
 
                 foreach (ulong obj in heap.EnumerateObjectAddresses())
                 {
-                    Assert.True(hash.Contains(obj));
+                    hash.Contains(obj).ShouldBeTrue();
                     hash.Remove(obj);
-                    Assert.False(hash.Contains(obj));
+                    hash.Contains(obj).ShouldBeFalse();
                 }
             }
         }
@@ -104,11 +104,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ObjectSet hash = new ObjectSet(heap);
                 foreach (ulong obj in heap.EnumerateObjectAddresses())
                 {
-                    Assert.False(hash.Contains(obj));
-                    Assert.True(hash.Add(obj));
-                    Assert.True(hash.Contains(obj));
-                    Assert.False(hash.Add(obj));
-                    Assert.True(hash.Contains(obj));
+                    hash.Contains(obj).ShouldBeFalse();
+                    hash.Add(obj).ShouldBeTrue();
+                    hash.Contains(obj).ShouldBeTrue();
+                    hash.Add(obj).ShouldBeFalse();
+                    hash.Contains(obj).ShouldBeTrue();
                 }
             }
         }
@@ -131,7 +131,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 try
                 {
                     gcroot.BuildCache(source.Token);
-                    Assert.True(false, "Should have been cancelled!");
+                    throw new Exception("Should have been cancelled!");
                 }
                 catch (OperationCanceledException)
                 {
@@ -157,7 +157,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 try
                 {
                     gcroot.EnumerateGCRoots(target, false, source.Token).ToArray();
-                    Assert.True(false, "Should have been cancelled!");
+                    throw new Exception("Should have been cancelled!");
                 }
                 catch (OperationCanceledException)
                 {
@@ -182,7 +182,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 try
                 {
                     gcroot.FindSinglePath(source, target, cancelSource.Token);
-                    Assert.True(false, "Should have been cancelled!");
+                    throw new Exception("Should have been cancelled!");
                 }
                 catch (OperationCanceledException)
                 {
@@ -207,7 +207,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 try
                 {
                     gcroot.EnumerateAllPaths(source, target, false, cancelSource.Token).ToArray();
-                    Assert.True(false, "Should have been cancelled!");
+                    throw new Exception("Should have been cancelled!");
                 }
                 catch (OperationCanceledException)
                 {
@@ -226,17 +226,17 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
-                Assert.False(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeFalse();
                 GCStaticRootsImpl(gcroot);
 
                 gcroot.BuildCache(CancellationToken.None);
 
                 gcroot.AllowParallelSearch = false;
-                Assert.True(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeTrue();
                 GCStaticRootsImpl(gcroot);
 
                 gcroot.AllowParallelSearch = true;
-                Assert.True(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeTrue();
                 GCStaticRootsImpl(gcroot);
             }
         }
@@ -257,21 +257,21 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
                 ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
-                Assert.False(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeFalse();
                 GCRootsImpl(gcroot);
 
                 gcroot.BuildCache(CancellationToken.None);
 
                 gcroot.AllowParallelSearch = false;
-                Assert.True(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeTrue();
                 GCRootsImpl(gcroot);
 
                 gcroot.AllowParallelSearch = true;
-                Assert.True(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeTrue();
                 GCRootsImpl(gcroot);
             }
         }
@@ -282,10 +282,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             ulong target = heap.GetObjectsOfType("TargetType").Single();
             GCRootPath[] rootPaths = gcroot.EnumerateGCRoots(target, false, CancellationToken.None).ToArray();
 
+            
 #if !NETCOREAPP2_1
-            rootPaths.Should().HaveCountGreaterOrEqualTo(2);
+            rootPaths.Length.ShouldBeGreaterThanOrEqualTo(2);
 #else
-            rootPaths.Should().HaveCountGreaterOrEqualTo(1);
+            rootPaths.ShouldNotBeEmpty();
 #endif
 
             foreach (GCRootPath rootPath in rootPaths)
@@ -314,9 +315,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             }
 
 #if !NETCOREAPP2_1
-            Assert.True(hasThread);
+            hasThread.ShouldBeTrue();
 #endif
-            Assert.True(hasStatic);
+            hasStatic.ShouldBeTrue();
         }
 
         [Fact]
@@ -325,15 +326,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
                 ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
-                Assert.False(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeFalse();
                 FindPathImpl(gcroot);
 
                 gcroot.BuildCache(CancellationToken.None);
-                Assert.True(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeTrue();;
                 FindPathImpl(gcroot);
             }
         }
@@ -354,16 +355,16 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dataTarget = TestTargets.GCRoot.LoadFullDump())
             {
                 ClrRuntime runtime = dataTarget.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 
                 GCRoot gcroot = new GCRoot(runtime.Heap);
 
                 gcroot.ClearCache();
-                Assert.False(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeFalse();
                 FindAllPathsImpl(gcroot);
 
                 gcroot.BuildCache(CancellationToken.None);
-                Assert.True(gcroot.IsFullyCached);
+                gcroot.IsFullyCached.ShouldBeTrue();
                 FindAllPathsImpl(gcroot);
             }
         }
@@ -377,7 +378,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 .Take(4).ToArray();
 
             // There are exactly three paths to the object in the test target
-            Assert.Equal(3, paths.Length);
+            paths.Length.ShouldBe(3);
 
             foreach (LinkedList<ClrObject> path in paths)
                 AssertPathIsCorrect(heap, path.ToArray(), source, target);
@@ -394,16 +395,16 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
         private void AssertPathIsCorrect(ClrHeap heap, ClrObject[] path, ulong source, ulong target)
         {
-            Assert.NotNull(path);
-            Assert.True(path.Length > 0);
+            path.ShouldNotBeNull();
+            (path.Length > 0).ShouldBeTrue();
 
             ClrObject first = path.First();
-            Assert.Equal(source, first.Address);
+            first.Address.ShouldBe(source);
 
             for (int i = 0; i < path.Length - 1; i++)
             {
                 ClrObject curr = path[i];
-                Assert.Equal(curr.Type, heap.GetObjectType(curr.Address));
+                heap.GetObjectType(curr.Address).ShouldBe(curr.Type);
 
                 List<ulong> refs = new List<ulong>();
                 curr.Type.EnumerateRefsOfObject(curr.Address, (obj, offs) => refs.Add(obj));
@@ -413,8 +414,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             }
 
             ClrObject last = path.Last();
-            Assert.Equal(last.Type, heap.GetObjectType(last.Address));
-            Assert.Equal(target, last.Address);
+            heap.GetObjectType(last.Address).ShouldBe(last.Type);
+            last.Address.ShouldBe(target);
         }
     }
 }

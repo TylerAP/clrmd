@@ -9,7 +9,13 @@ COPY . .
 
 RUN dotnet restore src/Microsoft.Diagnostics.Runtime.Tests
 
-RUN dotnet build --no-restore src/Microsoft.Diagnostics.Runtime.Tests
+ENV LD_LIBRARY_PATH=/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.6/
 
-RUN LD_LIBRARY_PATH='/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.6/' \
-dotnet test --blame --no-build -v n --filter AttachTests src/Microsoft.Diagnostics.Runtime.Tests -- --verbose
+ENTRYPOINT [ \
+    "dotnet", "test", \
+    "--blame", \
+    "-v", "n", \
+    "--filter", "AttachTests", \
+    "src/Microsoft.Diagnostics.Runtime.Tests", \
+    "--", "--verbose" \
+]

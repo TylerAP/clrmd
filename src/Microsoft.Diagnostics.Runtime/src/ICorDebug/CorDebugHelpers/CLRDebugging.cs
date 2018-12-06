@@ -5,9 +5,10 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using static Microsoft.Diagnostics.Runtime.Utilities.DebugShimNativeMethods;
 using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     /// <summary>
     /// Wrapper for the ICLRDebugging shim interface. This interface exposes the native pipeline
@@ -24,10 +25,11 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
         /// <remarks>Creates the underlying interface from mscoree!CLRCreateInstance</remarks>
         public CLRDebugging()
         {
-            object o;
+            IntPtr pUnk;
             Guid ifaceId = typeof(ICLRDebugging).GetGuid();
             Guid clsid = clsidCLRDebugging;
-            CLRCreateInstance(ref clsid, ref ifaceId, out o);
+            var hr = CLRCreateInstance(ref clsid, ref ifaceId, out pUnk);
+            var o = Marshal.GetObjectForIUnknown(pUnk);
             _clrDebugging = (ICLRDebugging)o;
         }
 

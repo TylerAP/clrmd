@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Diagnostics.Runtime.Utilities;
 using Microsoft.Diagnostics.Runtime.Utilities.Pdb;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -137,7 +138,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             foreach (Task<string> task in tasks)
             {
                 string taskDac = await task;
-                Assert.Equal(dac, taskDac);
+                taskDac.ShouldBe(dac);
             }
         }
 
@@ -161,7 +162,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             foreach (Task<string> task in tasks)
             {
                 string taskPdb = await task;
-                Assert.Equal(taskPdb, pdb);
+                pdb.ShouldBe(taskPdb);
             }
         }
     }

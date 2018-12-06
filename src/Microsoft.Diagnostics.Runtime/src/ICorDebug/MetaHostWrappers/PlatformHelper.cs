@@ -1,6 +1,6 @@
 using System;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     static class PlatformHelper
     {

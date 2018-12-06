@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -27,11 +27,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     SymbolLocatorTests.WellKnownDacImageSize,
                     false);
 
-                Assert.NotNull(badDac);
+                badDac.ShouldNotBeNull();
 
                 ClrInfo info = dt.ClrVersions.SingleOrDefault();
 
-                Assert.NotNull(info);
+                info.ShouldNotBeNull();
 
                 Assert.Throws<InvalidOperationException>(() => info.CreateRuntime(badDac));
             }
@@ -45,10 +45,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrInfo info = dt.ClrVersions.Single();
                 string dac = info.LocalMatchingDac;
 
-                Assert.NotNull(dac);
+                dac.ShouldNotBeNull();
 
                 ClrRuntime runtime = info.CreateRuntime(dac);
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
             }
         }
 
@@ -58,11 +58,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.NestedException.LoadFullDump())
             {
                 ClrInfo info = dt.ClrVersions.SingleOrDefault();
-                Assert.NotNull(info);
+                info.ShouldNotBeNull();
 
                 ClrRuntime runtime = info.CreateRuntime();
 
-                Assert.Equal(info, runtime.ClrInfo);
+                runtime.ClrInfo.ShouldBe(info);
             }
         }
 
@@ -95,13 +95,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
 
                 // TODO: where is NestedException.dll?
                 IEnumerable<string> actual = runtime.Modules
                     .Select(m => Path.GetFileName(m.FileName));
 
-                actual.Should().SetEqual(ModuleEnumerationTestExpected);
+                actual.ShouldBe(ModuleEnumerationTestExpected, true);
                 //.BeEquivalentTo(expected);
             }
         }

@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [Guid("FCE5EFA0-8BBA-4f8e-A036-8F2022B08466")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

@@ -2,3 +2,5 @@ version: '3'
 services:
   clrmd-tests:
     build: .
+    cap_add:
+      - SYS_PTRACE

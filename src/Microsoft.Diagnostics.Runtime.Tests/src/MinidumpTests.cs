@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -28,11 +28,11 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.NestedException.LoadMiniDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
 
                 ClrThread thread = runtime.GetMainThread();
                 
-                Assert.NotNull(thread);
+                thread.ShouldNotBeNull();
 
                 string[] expectedStackFrameMethodNames = IntPtr.Size == 8
                     //? new[] {"Inner", "Inner", "Middle", "Outer", "Main"}
@@ -44,24 +44,24 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 var stackFrameMethodNames = thread.StackTrace.Select(f => f.Method?.Name).Take(50);
 
-                stackFrameMethodNames.Should().Equal(expectedStackFrameMethodNames);
+                stackFrameMethodNames.ShouldBe(expectedStackFrameMethodNames);
 
                 foreach (ClrStackFrame frame in thread.StackTrace)
                 {
                     if (frame.Kind == ClrStackFrameType.Runtime)
                     {
-                        Assert.Equal(0ul, frame.InstructionPointer);
-                        Assert.NotEqual(0ul, frame.StackPointer);
+                        frame.InstructionPointer.ShouldBe(0ul);
+                        frame.StackPointer.ShouldNotBe(0ul);
                     }
                     else
                     {
-                        Assert.NotEqual(0ul, frame.InstructionPointer);
-                        Assert.NotEqual(0ul, frame.StackPointer);
-                        Assert.NotNull(frame.Method);
-                        Assert.NotNull(frame.Method.Type);
-                        Assert.NotNull(frame.Method.Type.Module);
+                        frame.InstructionPointer.ShouldNotBe(0ul);
+                        frame.StackPointer.ShouldNotBe(0ul);
+                        frame.Method.ShouldNotBeNull();
+                        frame.Method.Type.ShouldNotBeNull();
+                        frame.Method.Type.Module.ShouldNotBeNull();
 #if !NETCOREAPP2_1
-                        Assert.Equal(frames[i],  frame.Method.Name);
+                        frame.Method.Name.ShouldBe(frames[i]);
 #else
 #endif
                         ++i;

@@ -25,7 +25,7 @@ namespace Microsoft.Diagnostics.Runtime
                 : "mscordacwks";
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? $"{dacName}_{currentArchitecture}_{targetArchitecture}_{clrVersion.Major}.{clrVersion.Minor}.{clrVersion.Revision}.{clrVersion.Patch:D2}.dll"
-                : $"lib{dacName}_{currentArchitecture}_{targetArchitecture}_{clrVersion.Major}.{clrVersion.Minor}.{clrVersion.Revision}.{clrVersion.Patch:D2}.so";
+                : $"lib{dacName}.so";
         }
 
         internal static string GetDacFileName(ClrFlavor flavor, Runtime.Architecture targetArchitecture) {

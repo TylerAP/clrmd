@@ -147,7 +147,7 @@ namespace Microsoft.Diagnostics.Runtime
         {
         }
 
-        internal ClrHandle(V45Runtime clr, ClrHeap heap, HandleData handleData)
+        internal ClrHandle(DesktopRuntimeBase clr, ClrHeap heap, HandleData handleData)
         {
             Address = handleData.Handle;
             clr.ReadPointer(Address, out ulong obj);

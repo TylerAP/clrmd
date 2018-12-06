@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Diagnostics.Runtime.ICorDebug;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 
 namespace Microsoft.Diagnostics.Runtime.Desktop
 {

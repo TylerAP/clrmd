@@ -5,7 +5,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -21,7 +21,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 bool encounteredFoo = false;
@@ -29,15 +29,15 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 foreach (ulong obj in heap.EnumerateObjectAddresses())
                 {
                     ClrType type = heap.GetObjectType(obj);
-                    Assert.NotNull(type);
+                    type.ShouldNotBeNull();
                     if (type.Name == "Foo")
                         encounteredFoo = true;
 
                     count++;
                 }
 
-                encounteredFoo.Should().BeTrue();
-                count.Should().BeGreaterThan(0);
+                encounteredFoo.ShouldBeTrue();
+                count.ShouldBeGreaterThan(0);
             }
         }
 
@@ -48,7 +48,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 List<ClrObject> objects = new List<ClrObject>(heap.EnumerateObjects());
@@ -58,14 +58,14 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 {
                     ClrObject actual = objects[count++];
 
-                    actual.Address.Should().Be(obj);
+                    actual.Address.ShouldBe(obj);
 
                     ClrType type = heap.GetObjectType(obj);
                     
-                    actual.Type.Should().BeSameAs(type);
+                    actual.Type.ShouldBeSameAs(type);
                 }
 
-                count.Should().BeGreaterThan(0);
+                count.ShouldBeGreaterThan(0);
             }
         }
 
@@ -76,24 +76,24 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 List<ClrObject> expectedList = new List<ClrObject>(heap.EnumerateObjects());
 
                 heap.CacheHeap(CancellationToken.None);
-                Assert.True(heap.IsHeapCached);
+                heap.IsHeapCached.ShouldBeTrue();
                 List<ClrObject> actualList = new List<ClrObject>(heap.EnumerateObjects());
 
-                Assert.True(actualList.Count > 0);
-                Assert.Equal(expectedList.Count, actualList.Count);
+                (actualList.Count > 0).ShouldBeTrue();
+                actualList.Count.ShouldBe(expectedList.Count);
 
                 for (int i = 0; i < actualList.Count; i++)
                 {
                     ClrObject expected = expectedList[i];
                     ClrObject actual = actualList[i];
 
-                    actual.Should().Be(expected);
+                    actual.ShouldBe(expected);
                 }
             }
         }
@@ -104,10 +104,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump(GCMode.Server))
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
-                runtime.ServerGC.Should().BeTrue();
+                runtime.ServerGC.ShouldBeTrue();
 
                 CheckSegments(heap);
             }
@@ -119,10 +119,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
-                runtime.ServerGC.Should().BeFalse();
+                runtime.ServerGC.ShouldBeFalse();
 
                 CheckSegments(heap);
             }
@@ -132,23 +132,23 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             foreach (ClrSegment seg in heap.Segments)
             {
-                seg.Start.Should().NotBe(0ul);
-                seg.End.Should().NotBe(0ul);
-                seg.Start.Should().BeLessOrEqualTo(seg.End);
+                seg.Start.ShouldNotBe(0ul);
+                seg.End.ShouldNotBe(0ul);
+                seg.Start.ShouldBeLessThanOrEqualTo(seg.End);
 
-                seg.Start.Should().BeLessThan(seg.CommittedEnd);
-                seg.CommittedEnd.Should().BeLessThan(seg.ReservedEnd);
+                seg.Start.ShouldBeLessThan(seg.CommittedEnd);
+                seg.CommittedEnd.ShouldBeLessThan(seg.ReservedEnd);
 
                 if (!seg.IsEphemeral)
                 {
-                    seg.Gen0Length.Should().Be(0ul);
-                    seg.Gen1Length.Should().Be(0ul);
+                    seg.Gen0Length.ShouldBe(0ul);
+                    seg.Gen1Length.ShouldBe(0ul);
                 }
                 
                 foreach (ulong obj in seg.EnumerateObjectAddresses())
                 {
                     ClrSegment curr = heap.GetSegmentByAddress(obj);
-                    curr.Should().BeSameAs(seg);
+                    curr.ShouldBeSameAs(seg);
                 }
             }
         }

@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -25,10 +26,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 int i = 0;
                 foreach (ClrHandle hnd in runtime.EnumerateHandles())
-                    Assert.Equal(handles[i++], hnd);
+                    ( hnd).ShouldBe(handles[i++]);
 
                 // We create at least this many handles in the test, plus the runtime uses some.
-                Assert.True(handles.Count > 4);
+                (handles.Count > 4).ShouldBeTrue();
             }
         }
 
@@ -43,7 +44,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
 
                 foreach (ClrHandle handle in runtime.EnumerateHandles())
-                    Assert.True(handles.Add(handle));
+                    (handles.Add(handle)).ShouldBeTrue();
 
                 // Make sure we had at least one AsyncPinned handle
                 Assert.Contains(handles, h => h.HandleType == HandleType.AsyncPinned);

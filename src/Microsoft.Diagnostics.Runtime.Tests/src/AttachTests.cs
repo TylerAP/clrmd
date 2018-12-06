@@ -2,15 +2,22 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class AttachTests
     {
+        private readonly ITestOutputHelper _output;
+
         static AttachTests() =>
             Helpers.InitHelpers();
+
+        
+        public AttachTests(ITestOutputHelper output) =>
+            _output = output;
 
         private static readonly string s_dotnetPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? Environment.ExpandEnvironmentVariables("%ProgramFiles%\\dotnet\\dotnet.exe")
@@ -40,13 +47,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             {
                 try
                 {
-                    Assert.NotNull(proc);
+                    proc.ShouldNotBeNull();
 
-                    proc.WaitForExit(15);
+                    proc.WaitForExit(45);
 
                     proc.Refresh();
 
-                    proc.HasExited.Should().BeFalse();
+                    proc.HasExited.ShouldBeFalse();
 
                     var pid = proc.Id;
                     using (DataTarget dt = DataTarget.AttachToProcess(pid, 1000, attachFlag))
@@ -67,7 +74,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                             proc.WaitForExit(15);
                         }
 
-                        proc.HasExited.Should().BeTrue();
+                        proc.HasExited.ShouldBeTrue();
                     }
                 }
             }
@@ -76,15 +83,35 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         [Fact]
         public void PassiveAttachTest()
         {
+            Console.SetError( new TestOutputHelper(_output) );
+            
             AttachBaseFunc(
                 AttachFlag.Passive,
                 dt =>
                     {
+                        dt.ShouldBeOfType<XPlatLiveDataTarget>();
+
+                        Console.Error.WriteLine("Got XPlatLiveDataTarget");
+                        
+                        dt.EnumerateModules().ShouldNotBeEmpty();
+
+                        Console.Error.WriteLine("Got Modules");
+
+                        dt.ClrVersions.ShouldNotBeEmpty();
+                        dt.ClrVersions.ShouldNotContain((ClrInfo)null);
+                        
+                        Console.Error.WriteLine("Got ClrVersions");
+
                         ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                        Assert.NotNull(runtime);
+                        runtime.ShouldNotBeNull();
+
+                        Console.Error.WriteLine("Got Runtime");
 
                         var appDom = runtime.AppDomains.SingleOrDefault();
-                        Assert.NotNull(runtime);
+                        runtime.ShouldNotBeNull();
+
+                        Console.Error.WriteLine("Got AppDomains");
+
                     });
         }
 
@@ -96,10 +123,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 dt =>
                     {
                         ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                        Assert.NotNull(runtime);
+                        runtime.ShouldNotBeNull();
 
                         var appDom = runtime.AppDomains.SingleOrDefault();
-                        Assert.NotNull(runtime);
+                        runtime.ShouldNotBeNull();
                     });
         }
 
@@ -111,10 +138,10 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 dt =>
                     {
                         ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                        Assert.NotNull(runtime);
+                        runtime.ShouldNotBeNull();
 
                         var appDom = runtime.AppDomains.SingleOrDefault();
-                        Assert.NotNull(runtime);
+                        runtime.ShouldNotBeNull();
                     });
         }
     }

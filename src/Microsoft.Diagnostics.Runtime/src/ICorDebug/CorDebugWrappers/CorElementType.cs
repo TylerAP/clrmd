@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     // Technically 0x40 is the only flag that could be set in combination with others, but we might
     // want to test for the presence of this value so we'll mark the enum as 'Flags'.

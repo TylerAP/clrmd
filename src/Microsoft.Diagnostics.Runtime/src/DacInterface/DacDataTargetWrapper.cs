@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.Diagnostics.Runtime.ICorDebug;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 using Microsoft.Diagnostics.Runtime.Interop;
 using Microsoft.Diagnostics.Runtime.Utilities;
 using IMAGE_DATA_DIRECTORY = Microsoft.Diagnostics.Runtime.Utilities.IMAGE_DATA_DIRECTORY;
@@ -30,8 +30,9 @@ namespace Microsoft.Diagnostics.Runtime.DacInterface
             _dataTarget = dataTarget;
             _dataReader = _dataTarget.DataReader;
             _modules = dataTarget.EnumerateModules().ToArray();
-            Array.Sort(_modules, delegate(ModuleInfo a, ModuleInfo b) { return a.ImageBase.CompareTo(b.ImageBase); });
+            Array.Sort(_modules, (a, b) => a.ImageBase.CompareTo(b.ImageBase));
 
+            // https://github.com/dotnet/coreclr/blob/master/src/inc/clrdata.idl
             VTableBuilder builder = AddInterface(IID_IDacDataTarget);
             builder.AddMethod(new GetMachineTypeDelegate(GetMachineType));
             builder.AddMethod(new GetPointerSizeDelegate(GetPointerSize));
@@ -42,6 +43,7 @@ namespace Microsoft.Diagnostics.Runtime.DacInterface
             builder.AddMethod(new SetTLSValueDelegate(SetTLSValue));
             builder.AddMethod(new GetCurrentThreadIDDelegate(GetCurrentThreadID));
             builder.AddMethod(new GetThreadContextDelegate(GetThreadContext));
+            builder.AddMethod(new SetThreadContextDelegate(SetThreadContext));
             builder.AddMethod(new RequestDelegate(Request));
             IDacDataTarget = builder.Complete();
 
@@ -117,11 +119,12 @@ namespace Microsoft.Diagnostics.Runtime.DacInterface
 
         public int GetImageBase(IntPtr self, string imagePath, out ulong baseAddress)
         {
-            imagePath = Path.GetFileNameWithoutExtension(imagePath);
+            imagePath = Path.GetFileNameWithoutExtension(imagePath) ?? "";
 
             foreach (ModuleInfo module in _modules)
             {
-                string moduleName = Path.GetFileNameWithoutExtension(module.FileName);
+                string moduleName = Path.GetFileNameWithoutExtension(module.FileName) ?? "";
+                
                 if (imagePath.Equals(moduleName, StringComparison.CurrentCultureIgnoreCase))
                 {
                     baseAddress = module.ImageBase;
@@ -145,10 +148,10 @@ namespace Microsoft.Diagnostics.Runtime.DacInterface
             ModuleInfo info = GetModule(address);
             if (info != null)
             {
-                if (Path.GetExtension(info.FileName).ToLower() == ".so")
+                if (Path.GetExtension(info.FileName)?.ToLower() == ".so")
                 {
                     // TODO
-                    Debug.WriteLine($"TODO: Implement reading from module '{info.FileName}'");
+                    Console.Error.WriteLine($"TODO: Implement reading from module '{info.FileName} (T{info.TimeStamp} S{info.FileSize} B{info.ImageBase} V{info.Version})'");
                     return E_NOTIMPL;
                 }
 
@@ -237,12 +240,14 @@ namespace Microsoft.Diagnostics.Runtime.DacInterface
 
         public int SetThreadContext(IntPtr self, uint threadID, uint contextSize, IntPtr context)
         {
+            Console.Error.WriteLine($"TODO: Implement SetThreadContext");
             return E_NOTIMPL;
         }
 
         public int Request(IntPtr self, uint reqCode, uint inBufferSize, IntPtr inBuffer, IntPtr outBufferSize, out IntPtr outBuffer)
         {
             outBuffer = IntPtr.Zero;
+            Console.Error.WriteLine($"TODO: Implement Request");
             return E_NOTIMPL;
         }
 

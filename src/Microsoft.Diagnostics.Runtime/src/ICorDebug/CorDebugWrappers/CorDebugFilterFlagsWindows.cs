@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     [Flags]
     public enum CorDebugFilterFlagsWindows

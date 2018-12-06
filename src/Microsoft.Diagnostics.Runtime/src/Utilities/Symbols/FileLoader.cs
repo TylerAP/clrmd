@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Microsoft.Diagnostics.Runtime.ICorDebug;
+using Microsoft.Diagnostics.Runtime.CorDebug;
 using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime.Utilities

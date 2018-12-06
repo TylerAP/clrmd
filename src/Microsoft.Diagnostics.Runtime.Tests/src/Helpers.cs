@@ -10,10 +10,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using FluentAssertions;
-using FluentAssertions.Collections;
-using FluentAssertions.Execution;
 using JetBrains.Annotations;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -25,7 +23,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             AppDomain.CurrentDomain.UnhandledException += (appDomObj, unhandled) =>
                 {
                     Action x = () => throw (Exception)unhandled.ExceptionObject;
-                    x.Should().NotThrow("Unhandled exception.");
+                    x.ShouldNotThrow();
                 };
         }
 
@@ -136,82 +134,6 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
         internal const string TempRoot = "clrmd_removeme_";
         
-        
-        
-        public static AndConstraint<TAssertions> SetEqual<TAssertions,T>(
-            this TAssertions sca,
-            IEnumerable<T> otherCollection, string because = "", params object[] becauseArgs)
-            where TAssertions : CollectionAssertions<IEnumerable<T>, TAssertions>
-        {
-            if (otherCollection == null)
-                throw new ArgumentNullException(nameof (otherCollection), "Cannot verify set equality against a <null> collection.");
-            switch (sca.Subject) {
-                case null:
-                {
-                    Execute.Assertion.BecauseOf(because, becauseArgs)
-                        .FailWith("Expected {context:collection} to set equal with {0}{reason}, but found {1}.", otherCollection, sca.Subject);
-                    break;
-                }
-                case IImmutableSet<T> subjImmSet:
-                {
-                    if (!subjImmSet.SetEquals(otherCollection))
-                    {
-                        Execute.Assertion.BecauseOf(because, becauseArgs)
-                            .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
-                    }
-
-                    break;
-                }
-                case ISet<T> subjSet:
-                {
-                    if (!subjSet.SetEquals(otherCollection))
-                    {
-                        Execute.Assertion.BecauseOf(because, becauseArgs)
-                            .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    switch (otherCollection) {
-                        case IImmutableSet<T> otherImmSet: {
-                            if (!otherImmSet.SetEquals(sca.Subject))
-                            {
-                                Execute.Assertion.BecauseOf(because, becauseArgs)
-                                    .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
-                            }
-
-                            return new AndConstraint<TAssertions>(sca);
-                        }
-                        case ISet<T> otherSet:
-                        {
-                            if (!otherSet.SetEquals(sca.Subject))
-                            {
-                                Execute.Assertion.BecauseOf(because, becauseArgs)
-                                    .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
-                            }
-
-                            break;
-                        }
-                        default:
-                        {
-                            if (!otherCollection.ToImmutableHashSet().SetEquals(sca.Subject))
-                            {
-                                Execute.Assertion.BecauseOf(because, becauseArgs)
-                                    .FailWith("Expected {context:collection} to set equal with {0}{reason}, but {1} does not.", otherCollection, sca.Subject);
-                            }
-
-                            break;
-                        }
-                    }
-
-                    break;
-                }
-            }
-            
-            return new AndConstraint<TAssertions>(sca);
-        }
     }
 
     public class GlobalCleanup

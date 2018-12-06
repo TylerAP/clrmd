@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
@@ -22,7 +23,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         targetObjectsCount++;
                 }
         
-                Assert.Equal(42, targetObjectsCount);
+                targetObjectsCount.ShouldBe(42);
             }
         }
         
@@ -41,7 +42,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         targetObjectsCount++;
                 }
         
-                Assert.Equal(13, targetObjectsCount);
+                targetObjectsCount.ShouldBe(13);
             }
         }
     }

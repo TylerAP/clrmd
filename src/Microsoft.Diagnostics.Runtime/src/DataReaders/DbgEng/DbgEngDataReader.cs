@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Microsoft.Diagnostics.Runtime.Interop;
+using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
 namespace Microsoft.Diagnostics.Runtime
 {
@@ -162,10 +163,6 @@ namespace Microsoft.Diagnostics.Runtime
             IDebugClient client = (IDebugClient)obj;
             return client;
         }
-
-        [DefaultDllImportSearchPaths(DllImportSearchPath.LegacyBehavior)]
-        [DllImport("dbgeng")]
-        public static extern uint DebugCreate(ref Guid InterfaceId, [MarshalAs(UnmanagedType.IUnknown)] out object Interface);
 
         public void Close()
         {

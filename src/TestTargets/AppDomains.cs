@@ -11,10 +11,6 @@ class Program
     
     static void Main(string[] args)
     {
-        string codebase = Assembly.GetExecutingAssembly().CodeBase;
-
-        if (codebase.StartsWith("file://"))
-            codebase = codebase.Substring(8).Replace('/', '\\');
 
 #if !NETCOREAPP2_1
         AppDomain domain = AppDomain.CreateDomain("Second AppDomain");
@@ -22,7 +18,9 @@ class Program
         AppDomain domain = AppDomain.CurrentDomain;
 #endif
 
-        domain.ExecuteAssembly(Path.Combine(Path.GetDirectoryName(codebase), "NestedException.dll"));
+        string asmPath = Path.Combine(Environment.CurrentDirectory, "bin", "x" + (IntPtr.Size==8 ? "64" : "86"), "NestedException.dll");
+        
+        domain.ExecuteAssembly(asmPath);
 
         while (true)
             Thread.Sleep(250);

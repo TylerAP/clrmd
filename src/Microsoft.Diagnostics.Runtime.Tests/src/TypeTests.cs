@@ -6,14 +6,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace Microsoft.Diagnostics.Runtime.Tests
 {
     public class TypeTests
     {
-        static TypeTests() =>Helpers.InitHelpers();
+        static TypeTests() =>
+            Helpers.InitHelpers();
 
         [Fact]
         public void IntegerObjectClrType()
@@ -21,7 +22,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
 
                 ClrHeap heap = runtime.Heap;
                 Assert.NotNull(heap);
@@ -42,9 +43,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 Assert.False(type.IsValueClass);
 
                 object value = type.GetValue(addr);
-                Assert.Equal("42", value.ToString());
+                value.ToString().ShouldBe("42");
                 Assert.IsType<int>(value);
-                Assert.Equal(42, (int)value);
+                ((int)value).ShouldBe(42);
 
                 Assert.Contains(addr, heap.EnumerateObjectAddresses());
             }
@@ -56,7 +57,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 // Ensure that we always have a component for every array type.
@@ -92,7 +93,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 foreach (ulong obj in heap.EnumerateObjectAddresses())
@@ -118,7 +119,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
 
                 ClrHeap heap = runtime.Heap;
 
@@ -127,7 +128,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                                    where t.Name == TypeName
                                    select t).ToArray();
 
-                Assert.Equal(2, types.Length);
+                types.Length.ShouldBe(2);
 #if !NETCOREAPP2_1
                 Assert.NotSame(types[0], types[1]);
 #endif
@@ -135,8 +136,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrModule module = runtime.Modules.SingleOrDefault(m => Path.GetFileName(m.FileName).Equals("sharedlibrary.dll", StringComparison.OrdinalIgnoreCase));
                 ClrType typeFromModule = module.GetTypeByName(TypeName);
 
-                Assert.Equal(TypeName, typeFromModule.Name);
-                Assert.Equal(types[0], typeFromModule);
+                typeFromModule.Name.ShouldBe(TypeName);
+                typeFromModule.ShouldBe(types[0]);
             }
         }
 
@@ -148,7 +149,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
 
                 ClrHeap heap = runtime.Heap;
                 heap.StackwalkPolicy = ClrRootStackwalkPolicy.Exact;
@@ -167,7 +168,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 ClrThread thread = runtime.GetMainThread();
                 Assert.NotNull(thread);
-                
+
                 // NOTE: this is using a helper, it was previously using .Single, now .FirstOrDefault
                 ClrStackFrame main = thread.GetFrame("Main");
                 ClrStackFrame inner = thread.GetFrame("Inner");
@@ -194,7 +195,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 HashSet<ulong> methodTables = (from obj in heap.EnumerateObjectAddresses()
@@ -208,9 +209,9 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 {
                     ClrType type = heap.GetTypeByMethodTable(mt);
                     ulong eeclass = heap.GetEEClassByMethodTable(mt);
-                    Assert.NotEqual(0ul, eeclass);
+                    eeclass.ShouldNotBe(0ul);
 
-                    Assert.NotEqual(0ul, heap.GetMethodTableByEEClass(eeclass));
+                    heap.GetMethodTableByEEClass(eeclass).ShouldNotBe(0ul);
                 }
             }
         }
@@ -221,12 +222,12 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 foreach (ClrType type in heap.EnumerateObjectAddresses().Select(obj => heap.GetObjectType(obj)).Unique())
                 {
-                    Assert.NotEqual(0ul, type.MethodTable);
+                    type.MethodTable.ShouldNotBe(0ul);
 
                     ClrType typeFromHeap;
 
@@ -242,7 +243,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         typeFromHeap = heap.GetTypeByMethodTable(type.MethodTable);
                     }
 
-                    Assert.Equal(type.MethodTable, typeFromHeap.MethodTable);
+                    typeFromHeap.MethodTable.ShouldBe(type.MethodTable);
                     Assert.Same(type, typeFromHeap);
                 }
             }
@@ -254,7 +255,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 int i = 0;
@@ -268,8 +269,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         bool result = heap.TryGetMethodTable(obj, out ulong mt, out ulong cmt);
 
                         Assert.True(result);
-                        Assert.NotEqual(0ul, mt);
-                        Assert.Equal(type.MethodTable, mt);
+                        mt.ShouldNotBe(0ul);
+                        mt.ShouldBe(type.MethodTable);
 
                         Assert.Same(type, heap.GetTypeByMethodTable(mt, cmt));
                     }
@@ -277,7 +278,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     {
                         ulong mt = heap.GetMethodTable(obj);
 
-                        Assert.NotEqual(0ul, mt);
+                        mt.ShouldNotBe(0ul);
                         Assert.Contains(mt, type.EnumerateMethodTables());
 
                         Assert.Same(type, heap.GetTypeByMethodTable(mt));
@@ -286,8 +287,8 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                         bool res = heap.TryGetMethodTable(obj, out ulong mt2, out ulong cmt);
 
                         Assert.True(res);
-                        Assert.Equal(mt, mt2);
-                        Assert.Equal(0ul, cmt);
+                        mt2.ShouldBe(mt);
+                        cmt.ShouldBe(0ul);
                     }
                 }
             }
@@ -299,7 +300,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.AppDomains.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
                 ClrHeap heap = runtime.Heap;
 
                 var objs = heap.EnumerateObjectAddresses().Select(addr => heap.GetObjectType(addr)).ToArray();
@@ -309,13 +310,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                     .Select(obj => obj)
                     .ToArray();
 
-                fooObjects.Should().NotBeEmpty();
+                fooObjects.ShouldNotBeEmpty();
 
                 ClrType fooType = heap.GetObjectType(fooObjects[0]);
 
                 // There are exactly two Foo objects in the process, one in each app domain (but not under .net core).
                 // They will have different method tables.
-                Assert.Equal(2, fooObjects.Length);
+                fooObjects.Length.ShouldBe(2);
 
 #if !NETCOREAPP2_1
                 Assert.NotSame(fooType, heap.GetObjectType(fooObjects[1]));
@@ -338,28 +339,28 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
 #if !NETCOREAPP2_1
                 // These are in different domains and should have different type handles:
-                Assert.NotEqual(nestedExceptionFooMethodTable, appDomainsFooMethodTable);
+                ( appDomainsFooMethodTable).ShouldNotBe(nestedExceptionFooMethodTable);
 #endif
 
                 // The MethodTable returned by ClrType should always be the method table that lives in the "first"
                 // AppDomain (in order of ClrAppDomain.Id).
-                Assert.Equal(appDomainsFooMethodTable, fooType.MethodTable);
+                fooType.MethodTable.ShouldBe(appDomainsFooMethodTable);
 
                 // Ensure that we enumerate two type handles and that they match the method tables we have above.
                 ulong[] methodTableEnumeration = fooType.EnumerateMethodTables().ToArray();
 #if !NETCOREAPP2_1
-                Assert.Equal(2, methodTableEnumeration.Length);
+                ( methodTableEnumeration.Length).ShouldBe(2);
 #else
                 Assert.Single(methodTableEnumeration);
 #endif
 
 #if !NETCOREAPP2_1
                 // These also need to be enumerated in ClrAppDomain.Id order
-                Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
-                Assert.Equal(nestedExceptionFooMethodTable, methodTableEnumeration[1]);
+                ( methodTableEnumeration[0]).ShouldBe(appDomainsFooMethodTable);
+                ( methodTableEnumeration[1]).ShouldBe(nestedExceptionFooMethodTable);
 #else
-                Assert.Equal(appDomainsFooMethodTable, methodTableEnumeration[0]);
-                Assert.Equal(appDomainsFooMethodTable, nestedExceptionFooMethodTable);
+                methodTableEnumeration[0].ShouldBe(appDomainsFooMethodTable);
+                nestedExceptionFooMethodTable.ShouldBe(appDomainsFooMethodTable);
 #endif
             }
         }
@@ -370,7 +371,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
             using (DataTarget dt = TestTargets.Types.LoadFullDump())
             {
                 ClrRuntime runtime = dt.ClrVersions.SingleOrDefault()?.CreateRuntime();
-                Assert.NotNull(runtime);
+                runtime.ShouldNotBeNull();
 
                 ClrHeap heap = runtime.Heap;
 
@@ -399,13 +400,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
         {
             ClrInstanceField field = type.GetFieldByName(name);
             Assert.NotNull(field);
-            Assert.Equal(name, field.Name);
+            field.Name.ShouldBe(name);
 
             object v = field.GetValue(obj);
             Assert.NotNull(v);
             Assert.IsType<T>(v);
 
-            Assert.Equal(value, (T)v);
+            v.ShouldBe(value);
 
             return field;
         }
@@ -438,13 +439,13 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 
                 for (int i = 0; i < expected.Length; i++)
                 {
-                    Assert.Equal(expected[i], (ulong)arrayType.GetArrayElementValue(s_array, i));
+                    ((ulong)arrayType.GetArrayElementValue(s_array, i)).ShouldBe(expected[i]);
 
                     ulong address = arrayType.GetArrayElementAddress(s_array, i);
                     ulong value = dt.DataReader.ReadPointerUnsafe(address);
 
-                    Assert.NotEqual(0ul, address);
-                    Assert.Equal(expected[i], value);
+                    address.ShouldNotBe(0ul);
+                    value.ShouldBe(expected[i]);
                 }
             }
         }
@@ -466,7 +467,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 ClrType arrayType = heap.GetObjectType(s_array);
 
                 Assert.NotNull(arrayType);
-                Assert.Equal(3, arrayType.GetArrayLength(s_array));
+                arrayType.GetArrayLength(s_array).ShouldBe(3);
             }
         }
 
@@ -495,7 +496,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
                 arrayType.EnumerateRefsOfObject(s_array, (obj, offs) => objs.Add(obj));
 
                 // We do not guarantee the order in which these are enumerated.
-                Assert.Equal(3, objs.Count);
+                objs.Count.ShouldBe(3);
                 Assert.Contains(s_one, objs);
                 Assert.Contains(s_two, objs);
                 Assert.Contains(s_three, objs);

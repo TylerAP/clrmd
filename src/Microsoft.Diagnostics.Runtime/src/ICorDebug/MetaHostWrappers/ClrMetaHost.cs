@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.Diagnostics.Runtime.Utilities;
-using static Microsoft.Diagnostics.Runtime.ICorDebug.PlatformHelper;
+using static Microsoft.Diagnostics.Runtime.CorDebug.PlatformHelper;
+using static Microsoft.Diagnostics.Runtime.Utilities.DebugShimNativeMethods;
 using static Microsoft.Diagnostics.Runtime.Utilities.WindowsNativeMethods;
 
-namespace Microsoft.Diagnostics.Runtime.ICorDebug
+namespace Microsoft.Diagnostics.Runtime.CorDebug
 {
     /// <summary>
     /// Wrapper for ICLRMetaHost. Used to find information about runtimes.
@@ -25,10 +25,11 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
 
         public CLRMetaHost()
         {
-            object o;
+            IntPtr pUnk;
             Guid ifaceId = typeof(ICLRMetaHost).GetGuid();
             Guid clsid = clsidCLRMetaHost;
-            CLRCreateInstance(ref clsid, ref ifaceId, out o);
+            var hr = CLRCreateInstance(ref clsid, ref ifaceId, out pUnk);
+            var o = Marshal.GetObjectForIUnknown(pUnk);
             m_metaHost = (ICLRMetaHost)o;
         }
 
