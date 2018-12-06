@@ -58,10 +58,11 @@
         <Message Text="Generating dumps for $(TargetPath)" />
         
         
-        <!-- used this for locating dump artifacts; may be useful in future -->
+        <!-- used this for locating dump artifacts; may be useful in future
         <ItemGroup>
             <TestTargetsTouchFile Include=".touch" />
         </ItemGroup>
+        -->
         
         <Touch Files="@(TestTargetsTouchFile)" AlwaysCreate="true" ForceTouch="true" />
 
@@ -81,11 +82,11 @@
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvr" />
         </Exec>
 
-        <!-- used this for locating dump artifacts; may be useful in future -->
+        <!-- used this for locating dump artifacts; may be useful in future
         <Exec Command="find / \( \( -path /sys \) -o \( -path /proc \) \) -prune -o -cnewer '%(TestTargetsTouchFile.Identity)'" ContinueOnError="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="CreatedFiles" />
         </Exec>
-        
+        -->
         <Error Text="$(CreatedFiles.Replace(';','&#10;'))" ContinueOnError="true" />
         
         <Error Condition="!Exists('$(TargetDumpFileName)_wks_mini_xplat.dmp')" Text="Failed to create $(TargetDumpFileName)_wks_mini_xplat.dmp'&#10;'$(TargetOutputWksMini.Replace(';','&#10;'))" />
