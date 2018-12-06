@@ -70,7 +70,7 @@
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputWksMini" />
         </Exec>
 
-        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_wks_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
+        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_wks_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_wks_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=2;COMPLUS_BuildFlavor=WKS;COMPlus_gcServer=0" ContinueOnError="true" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputWks" />
         </Exec>
 
@@ -78,7 +78,7 @@
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvrMini" />
         </Exec>
 
-        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_svr_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=4;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
+        <Exec Command="dotnet '$(TargetPath)' || mv core '$(TargetDumpFileName)_svr_xplat.dmp'" EnvironmentVariables="COMPlus_DbgMiniDumpName=$(TargetName)_svr_xplat.dmp;COMPlus_CreateDumpDiagnostics=1;COMPlus_DbgEnableMiniDump=1;COMPlus_DbgMiniDumpType=2;COMPLUS_BuildFlavor=SVR;COMPlus_gcServer=1" ContinueOnError="true" ConsoleToMSBuild="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="TargetOutputSvr" />
         </Exec>
 
