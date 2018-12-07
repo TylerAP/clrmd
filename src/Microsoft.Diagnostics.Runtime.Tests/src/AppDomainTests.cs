@@ -144,7 +144,7 @@ namespace Microsoft.Diagnostics.Runtime.Tests
 #if !NETCOREAPP2_1
                 Path.GetFileName(mscorlib.FileName).ShouldBe("mscorlib.dll", Case.Insensitive);
 #else
-                Path.GetFileName(mscorlib.FileName).ShouldBe("System.Private.Corelib.dll", Case.Insensitive);
+                Path.GetFileName(mscorlib.FileName).ShouldBe("System.Private.Corelib.dll", StringCompareShould.IgnoreCase);
 #endif
             }
         }

@@ -126,7 +126,7 @@ namespace Microsoft.Diagnostics.Runtime
             {
                 Console.Error.WriteLine("Crap! Couldn't find DAC module!");
                 foreach (var mod in EnumerateModules())
-                    Console.Error.WriteLine($"{mod.FileSize,11} {mod.ImageBase:x8} {mod.FileName}");
+                    Console.Error.WriteLine($"0x{mod.ImageBase:x16} {mod.FileSize,11}b {mod.FileName}");
             }
 
             ClrInfo[] result = versions.ToArray();
@@ -216,7 +216,7 @@ namespace Microsoft.Diagnostics.Runtime
 
         public bool ReadMemory(ulong address, IntPtr buffer, int bytesRequested, out int bytesRead)
         {
-            Console.Error.WriteLine($"Attempting to read {bytesRequested} bytes from 0x{address:X8} into 0x{(ulong)buffer.ToInt64():X8}.");
+            //Console.Error.WriteLine($"Attempting to read {bytesRequested} bytes from 0x{address:X8} into 0x{(ulong)buffer.ToInt64():X8}.");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 try

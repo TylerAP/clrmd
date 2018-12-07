@@ -9,6 +9,8 @@ class Program
     
     static void Main(string[] args)
     {
+        Console.WriteLine("Hello");
+        
         Console.CancelKeyPress += (con, ckp) => Environment.Exit(0);
         
         while (true)
